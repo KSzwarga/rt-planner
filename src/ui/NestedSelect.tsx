@@ -188,8 +188,8 @@ export function NestedSelect({ label, entries, value, onChange }: NestedSelectPr
                     className={className}
                     ref={(element) => {
                       itemRefs.current[index] = element
-                    }
-                    onMouseDown={(e) => e.preventDefault()}}
+                    }}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => select(item.id)}
                     onKeyDown={(event) => handleItemKeyDown(event, index)}
                     onMouseEnter={(event) => {
