@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/rt-planner/'
   test: {
     // Unit tests only. Playwright specs in e2e/ run with `npm run test:e2e`.
     include: ['test/**/*.test.{ts,tsx}'],
