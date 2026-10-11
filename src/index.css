@@ -23,6 +23,24 @@
   --locked-line-strong: #6b2a2a;
   --locked-emblem-bg: #2a1111;
   --locked-text: #b0817b;
+  --danger: #e2574c;
+
+  --ring: #4cc06a;
+  --accent-dim: #b07a28;
+  --node-bg: #2a1414;
+  --node-line: #2d5a38;
+
+  /* Ring nodes: gray when empty, coloured by slot when filled. */
+  --slot-empty: #5c6862;
+  --slot-empty-bg: #1a201d;
+  --slot-empty-line: #2c3531;
+  --slot-keystone: #f2a93b;
+  --slot-ability: #f0803a;
+  --slot-upgrade: #e9cf6b;
+  --slot-talent: #5ea8e8;
+  --slot-common-talent: #a98aef;
+  --slot-skill: #5fd38a;
+  --slot-characteristic: #e8705e;
 
   --shadow: rgba(0, 0, 0, 0.55) 0 12px 24px -6px;
 

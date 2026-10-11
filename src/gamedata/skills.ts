@@ -28,8 +28,10 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.ATHLETICS,
     name: 'Athletics',
+    abbreviation: 'ATH',
     availableForOrigins: [ORIGIN.astraMilitarumCommander],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.warrior,
@@ -45,8 +47,10 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.AWARENESS,
     name: 'Awareness',
+    abbreviation: 'AWA',
     availableForOrigins: [ORIGIN.crimeLord],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.operative,
@@ -61,8 +65,10 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.CAROUSE,
     name: 'Carouse',
+    abbreviation: 'CAR',
     availableForOrigins: [ORIGIN.navyOfficer],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.warrior,
       FIRST_ARCHETYPE.officer,
@@ -73,6 +79,7 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.COERCION,
     name: 'Coercion',
+    abbreviation: 'COE',
     availableForOrigins: [
       ORIGIN.commissar,
       ORIGIN.arbitratorVigilant,
@@ -80,22 +87,27 @@ export const SKILLS: readonly SkillEntry[] = [
       ORIGIN.arbitratorSubductor,
     ],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.warrior, FIRST_ARCHETYPE.officer],
     availableForSecondArchetypes: [SECOND_ARCHETYPE.vanguard],
   },
   {
     id: SKILL.COMMERCE,
     name: 'Commerce',
+    abbreviation: 'COM',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.officer],
     availableForSecondArchetypes: [SECOND_ARCHETYPE.vanguard, SECOND_ARCHETYPE.grandStrategist],
   },
   {
     id: SKILL.DEMOLITION,
     name: 'Demolition',
+    abbreviation: 'DEM',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.warrior,
@@ -111,16 +123,20 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.LOGIC,
     name: 'Logic',
+    abbreviation: 'LOG',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.operative],
     availableForSecondArchetypes: [SECOND_ARCHETYPE.grandStrategist],
   },
   {
     id: SKILL.LORE_IMPERIUM,
     name: 'Lore (Imperium)',
+    abbreviation: 'LIM',
     availableForOrigins: [ORIGIN.ministorumPriest],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.operative, FIRST_ARCHETYPE.officer],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.assassin,
@@ -133,6 +149,7 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.LORE_WARP,
     name: 'Lore (Warp)',
+    abbreviation: 'LWP',
     availableForOrigins: [
       ORIGIN.sanctionedPsykerBiomancer,
       ORIGIN.sanctionedPsykerDiviner,
@@ -141,14 +158,17 @@ export const SKILLS: readonly SkillEntry[] = [
       ORIGIN.sanctionedPsykerTelepath,
     ],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [],
     availableForSecondArchetypes: [],
   },
   {
     id: SKILL.LORE_XENOS,
     name: 'Lore (Xenos)',
+    abbreviation: 'LXN',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.operative],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.assassin,
@@ -160,8 +180,10 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.MEDICAE,
     name: 'Medicae',
+    abbreviation: 'MED',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.warrior,
@@ -178,8 +200,10 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.PERSUASION,
     name: 'Persuasion',
+    abbreviation: 'PRS',
     availableForOrigins: [ORIGIN.noble],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.officer],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.vanguard,
@@ -190,8 +214,10 @@ export const SKILLS: readonly SkillEntry[] = [
   {
     id: SKILL.TECH_USE,
     name: 'Tech-Use',
+    abbreviation: 'TEC',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.operative],
     availableForSecondArchetypes: [SECOND_ARCHETYPE.grandStrategist],
   },

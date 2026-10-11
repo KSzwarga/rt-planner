@@ -89,7 +89,7 @@ describe('validateBuild replays the archetype choices', () => {
       const noble = validateBuild({ ...commissar, originId: ORIGIN.noble })
       expect(first(noble, 2, 'skillIncrease')).toBeNull()
       expect(warn).toHaveBeenCalledWith(
-        'Validator: nulled firstArchetypeChoicesIds[0] (level 2 skillIncrease) 4: not available to this archetype, origin or homeworld.',
+        'Validator: nulled firstArchetypeChoicesIds[0] (level 2 skillIncrease) 4: not available to this archetype, origin, homeworld or earlier talents.',
       )
     })
 

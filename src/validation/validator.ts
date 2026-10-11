@@ -1,4 +1,5 @@
 import { availableSecondArchetypeIds } from '../availability/archetypes'
+import type { ArchetypeTier } from '../availability/characterState'
 import { availableStartingIncreaseIds } from '../availability/startingIncreases'
 import { ABILITIES } from '../gamedata/abilities'
 import { ABILITY_LISTS } from '../gamedata/abilityLists'
@@ -11,9 +12,11 @@ import { ORIGINS } from '../gamedata/origins'
 import { SECOND_ARCHETYPES } from '../gamedata/secondArchetypes'
 import { SKILLS } from '../gamedata/skills'
 import { TALENT_LISTS } from '../gamedata/talentLists'
+import { type TalentGrants, talentGrants } from '../gamedata/talentGrants'
 import { talentRequirements } from '../gamedata/talentRequirements'
 import { TALENTS } from '../gamedata/talents'
 import { TRIUMPHS } from '../gamedata/triumphs'
+import { UPGRADES } from '../gamedata/upgrades'
 import type {
   AbilityEntry,
   AbilityList,
@@ -28,11 +31,12 @@ import type {
   TalentEntry,
   TalentList,
   TriumphEntry,
+  UpgradeEntry,
 } from '../gamedata/types'
 import type { BuildPlan, Id } from '../model/buildPlan'
 import type { Schema } from '../model/schema'
 import { unknownIdReason, validateId } from './nulling'
-import { initialState, replayChoices } from './replay'
+import { archetypeTiers, CHOICES_FIELD, initialState, type ReplayStart, replayChoices } from './replay'
 
 /** The tables the validator checks against. Tests can pass small fixture tables of the same shape. */
 export interface ValidatorTables {
@@ -48,8 +52,10 @@ export interface ValidatorTables {
   readonly talents: readonly TalentEntry[]
   readonly talentLists: readonly TalentList[]
   readonly talentRequirements: (talentId: Id) => readonly Requirement[]
+  readonly talentGrants: (talentId: Id) => TalentGrants
   readonly abilities: readonly AbilityEntry[]
   readonly abilityLists: readonly AbilityList[]
+  readonly upgrades: readonly UpgradeEntry[]
 }
 
 export const GAME_TABLES: ValidatorTables = {
@@ -65,8 +71,10 @@ export const GAME_TABLES: ValidatorTables = {
   talents: TALENTS,
   talentLists: TALENT_LISTS,
   talentRequirements,
+  talentGrants,
   abilities: ABILITIES,
   abilityLists: ABILITY_LISTS,
+  upgrades: UPGRADES,
 }
 
 /**
@@ -101,26 +109,23 @@ export function validateBuild(plan: BuildPlan, tables: ValidatorTables = GAME_TA
   )
   const secondArchetype = tables.secondArchetypes.find((entry) => entry.id === secondArchetypeId) ?? null
 
-  const state = initialState(
-    {
-      origin: tables.origins.find((entry) => entry.id === originId) ?? null,
-      homeworld: tables.homeworlds.find((entry) => entry.id === homeworldId) ?? null,
-      startingCharacteristicIncreasesIds,
-      firstArchetype,
-      secondArchetype,
-    },
-    tables,
-  )
-  // Levels 1–15, then 16–35, then 36–55, each in schema order.
-  const firstArchetypeChoicesIds = firstArchetype
-    ? replayChoices('firstArchetypeChoicesIds', 'first', firstArchetype.schema, plan.firstArchetypeChoicesIds, state, tables)
-    : []
-  const secondArchetypeChoicesIds = secondArchetype
-    ? replayChoices('secondArchetypeChoicesIds', 'second', secondArchetype.schema, plan.secondArchetypeChoicesIds, state, tables)
-    : []
-  const exemplarArchetypeChoicesIds = plan.isExemplar
-    ? replayChoices('exemplarArchetypeChoicesIds', 'exemplar', tables.exemplarSchema, plan.exemplarArchetypeChoicesIds, state, tables)
-    : []
+  const start: ReplayStart = {
+    origin: tables.origins.find((entry) => entry.id === originId) ?? null,
+    homeworld: tables.homeworlds.find((entry) => entry.id === homeworldId) ?? null,
+    startingCharacteristicIncreasesIds,
+    firstArchetype,
+    secondArchetype,
+  }
+  const state = initialState(start, tables)
+  // Levels 1–15, then 16–35, then 36–55, each in schema order. A tier the build lacks has no choices.
+  const choices: Pick<BuildPlan, (typeof CHOICES_FIELD)[ArchetypeTier]> = {
+    firstArchetypeChoicesIds: [],
+    secondArchetypeChoicesIds: [],
+    exemplarArchetypeChoicesIds: [],
+  }
+  for (const { tier, schema } of archetypeTiers(start, plan.isExemplar, tables)) {
+    choices[CHOICES_FIELD[tier]] = replayChoices(tier, schema, plan[CHOICES_FIELD[tier]], state, tables)
+  }
 
   return {
     ...plan,
@@ -130,10 +135,8 @@ export function validateBuild(plan: BuildPlan, tables: ValidatorTables = GAME_TA
     darkestHourId,
     startingCharacteristicIncreasesIds,
     firstArchetypeId,
-    firstArchetypeChoicesIds,
     secondArchetypeId,
-    secondArchetypeChoicesIds,
-    exemplarArchetypeChoicesIds,
+    ...choices,
   }
 }
 

@@ -21,7 +21,7 @@ export function increaseUnavailableReason(
   state: CharacterState,
   tier: ArchetypeTier,
 ): string | null {
-  if (!hasSource(entry, state, tier)) return 'not available to this archetype, origin or homeworld'
+  if (!hasIncreaseSource(entry, state, tier)) return 'not available to this archetype, origin, homeworld or earlier talents'
   if ((counts.get(entry.id) ?? 0) >= INCREASE_CAPS[tier]) return `already taken ${INCREASE_CAPS[tier]} times`
   return null
 }
@@ -36,10 +36,14 @@ export function availableIncreaseIds(
   return entries.filter((entry) => increaseUnavailableReason(entry, counts, state, tier) === null).map((entry) => entry.id)
 }
 
-/** Rule 1: the build's origin or homeworld unlocks the entry, or the archetype that owns the slot does. */
-function hasSource(entry: IncreaseEntry, state: CharacterState, tier: ArchetypeTier): boolean {
+/**
+ * Rule 1: the build's origin or homeworld unlocks the entry, a talent taken before the slot does, or
+ * the archetype that owns the slot does.
+ */
+export function hasIncreaseSource(entry: IncreaseEntry, state: CharacterState, tier: ArchetypeTier): boolean {
   if (state.origin !== null && entry.availableForOrigins.includes(state.origin.id)) return true
   if (state.homeworld !== null && entry.availableForHomeworlds.includes(state.homeworld.id)) return true
+  if (entry.availableForTalents.some((talentId) => state.talentsTaken.has(talentId))) return true
   switch (tier) {
     case 'first':
       return state.firstArchetype !== null && entry.availableForFirstArchetypes.includes(state.firstArchetype.id)

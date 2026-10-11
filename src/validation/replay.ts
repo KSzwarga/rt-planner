@@ -1,3 +1,4 @@
+import { type AbilitySlotRef, abilityOptions } from '../availability/abilities'
 import {
   type ArchetypeTier,
   CHARACTERISTIC_BASE_VALUE,
@@ -5,12 +6,12 @@ import {
   INCREASE_AMOUNT,
   type SlotRef,
 } from '../availability/characterState'
-import { type AbilitySlotRef, abilityOptions } from '../availability/abilities'
 import { increaseUnavailableReason } from '../availability/increases'
+import { requirementText } from '../availability/requirementText'
 import { type TalentSlotRef, talentOptions } from '../availability/talents'
-import { availableUpgradeIds, UPGRADE_IDS } from '../availability/upgrades'
-import type { FirstArchetypeEntry, HomeworldEntry, ListKey, OriginEntry, Requirement, SecondArchetypeEntry } from '../gamedata/types'
-import type { Choice, Id } from '../model/buildPlan'
+import { availableUpgradeIds } from '../availability/upgrades'
+import type { FirstArchetypeEntry, HomeworldEntry, ListKey, OriginEntry, SecondArchetypeEntry } from '../gamedata/types'
+import type { BuildPlan, Choice, Id } from '../model/buildPlan'
 import { choiceSlots, type Schema } from '../model/schema'
 import { isAbilitySlotKind, isTalentSlotKind, isUpgradeSlotKind, type UpgradeSlotKind } from '../model/slotKinds'
 import { unknownIdReason, validateId } from './nulling'
@@ -37,6 +38,34 @@ export interface ReplayStart {
   readonly secondArchetype: SecondArchetypeEntry | null
 }
 
+/** One archetype a build has, with the schema its choices follow. */
+export interface ArchetypeTierSchema {
+  readonly tier: ArchetypeTier
+  readonly schema: Schema
+}
+
+/** The `BuildPlan` field that holds each tier's choices. */
+export const CHOICES_FIELD = {
+  first: 'firstArchetypeChoicesIds',
+  second: 'secondArchetypeChoicesIds',
+  exemplar: 'exemplarArchetypeChoicesIds',
+} as const satisfies Record<ArchetypeTier, keyof BuildPlan>
+
+/** A choice slot of a build: its archetype tier, and its index in that tier's choices array. */
+export interface SlotPosition {
+  readonly tier: ArchetypeTier
+  readonly index: number
+}
+
+/** The archetypes a build has, in level order: first (1–15), second (16–35), Exemplar (36–55). */
+export function archetypeTiers(start: ReplayStart, isExemplar: boolean, tables: ValidatorTables): ArchetypeTierSchema[] {
+  return [
+    ...(start.firstArchetype ? [{ tier: 'first' as const, schema: start.firstArchetype.schema }] : []),
+    ...(start.secondArchetype ? [{ tier: 'second' as const, schema: start.secondArchetype.schema }] : []),
+    ...(isExemplar ? [{ tier: 'exemplar' as const, schema: tables.exemplarSchema }] : []),
+  ]
+}
+
 /**
  * The initial state, from the static choices (Architecture §6: Chronological check, step 1): every
  * characteristic at 30, plus homeworld and origin modifiers and the starting increases, and the
@@ -46,10 +75,10 @@ export function initialState(start: ReplayStart, tables: ValidatorTables): Repla
   const characteristics = new Map(tables.characteristics.map((entry) => [entry.id, CHARACTERISTIC_BASE_VALUE]))
   const backgrounds = [start.homeworld, start.origin].filter((entry) => entry !== null)
   for (const { characteristicId, amount } of backgrounds.flatMap((entry) => entry.characteristicModifiers)) {
-    characteristics.set(characteristicId, (characteristics.get(characteristicId) ?? CHARACTERISTIC_BASE_VALUE) + amount)
+    increment(characteristics, characteristicId, amount, CHARACTERISTIC_BASE_VALUE)
   }
   for (const id of start.startingCharacteristicIncreasesIds) {
-    if (id !== null) characteristics.set(id, (characteristics.get(id) ?? CHARACTERISTIC_BASE_VALUE) + INCREASE_AMOUNT)
+    if (id !== null) increment(characteristics, id, INCREASE_AMOUNT, CHARACTERISTIC_BASE_VALUE)
   }
 
   return {
@@ -75,7 +104,6 @@ export function initialState(start: ReplayStart, tables: ValidatorTables): Repla
  * choice slot of the schema.
  */
 export function replayChoices(
-  field: string,
   tier: ArchetypeTier,
   schema: Schema,
   choices: readonly (Choice | null)[],
@@ -84,12 +112,41 @@ export function replayChoices(
 ): (Choice | null)[] {
   return choiceSlots(schema).map((slot, index) => {
     const ref: SlotRef = { tier, level: slot.level, kind: slot.kind }
-    const choice = validateId(`${field}[${index}] (level ${slot.level} ${slot.kind})`, choices[index] ?? null, (id) =>
-      illegalChoiceReason(id, ref, state, tables),
-    )
-    if (choice !== null) applyChoice(choice, ref, state)
+    const field = `${CHOICES_FIELD[tier]}[${index}] (level ${slot.level} ${slot.kind})`
+    const choice = validateId(field, choices[index] ?? null, (id) => illegalChoiceReason(id, ref, state, tables))
+    if (choice !== null) applyChoice(choice, ref, state, tables)
     return choice
   })
+}
+
+/**
+ * The character state just before a slot of a validated build: the static choices, plus every
+ * choice in an earlier slot (an earlier level, or earlier in the same level). What a slot may hold
+ * is decided against this state, so later choices never count.
+ */
+export function stateBeforeSlot(plan: BuildPlan, position: SlotPosition, tables: ValidatorTables): CharacterState {
+  const start = replayStart(plan, tables)
+  const state = initialState(start, tables)
+  for (const { tier, schema } of archetypeTiers(start, plan.isExemplar, tables)) {
+    const choices = plan[CHOICES_FIELD[tier]]
+    for (const [index, slot] of choiceSlots(schema).entries()) {
+      if (tier === position.tier && index === position.index) return state
+      const choice = choices[index] ?? null
+      if (choice !== null) applyChoice(choice, { tier, level: slot.level, kind: slot.kind }, state, tables)
+    }
+  }
+  throw new Error(`The build has no ${position.tier} archetype slot ${position.index}`)
+}
+
+/** The replay start of a build whose static choices and archetypes are already validated. */
+export function replayStart(plan: BuildPlan, tables: ValidatorTables): ReplayStart {
+  return {
+    origin: tables.origins.find((entry) => entry.id === plan.originId) ?? null,
+    homeworld: tables.homeworlds.find((entry) => entry.id === plan.homeworldId) ?? null,
+    startingCharacteristicIncreasesIds: plan.startingCharacteristicIncreasesIds,
+    firstArchetype: tables.firstArchetypes.find((entry) => entry.id === plan.firstArchetypeId) ?? null,
+    secondArchetype: tables.secondArchetypes.find((entry) => entry.id === plan.secondArchetypeId) ?? null,
+  }
 }
 
 /** Why a choice is illegal in its slot, or null if it is legal: the slot kind's availability rule. */
@@ -103,7 +160,9 @@ function illegalChoiceReason(id: Id, slot: SlotRef, state: ReplayState, tables: 
     const option = talentOptions(state, talentSlot, talentRuleTables(tables)).find((candidate) => candidate.id === id)
     if (option === undefined) return "not in the slot's talent lists"
     if (option.isTaken) return 'already taken'
-    if (option.unmet.length > 0) return `unmet requirements: ${option.unmet.map((r) => describe(r, tables)).join(', ')}`
+    if (option.unmet.length > 0) {
+      return `unmet requirements: ${option.unmet.map((requirement) => requirementText(requirement, tables)).join(', ')}`
+    }
     return null
   }
 
@@ -117,7 +176,8 @@ function illegalChoiceReason(id: Id, slot: SlotRef, state: ReplayState, tables: 
   }
 
   if (isUpgradeSlotKind(kind)) {
-    if (!UPGRADE_IDS.includes(id)) return 'unknown ID'
+    const unknown = unknownIdReason(id, tables.upgrades)
+    if (unknown) return unknown
     return availableUpgradeIds(state, kind).includes(id) ? null : 'already taken'
   }
 
@@ -131,11 +191,14 @@ function illegalChoiceReason(id: Id, slot: SlotRef, state: ReplayState, tables: 
 }
 
 /** What a legal choice adds to the state (Availability Rules: How each choice changes the state). */
-function applyChoice(id: Id, slot: SlotRef, state: ReplayState): void {
+function applyChoice(id: Id, slot: SlotRef, state: ReplayState, tables: ValidatorTables): void {
   const { kind } = slot
   if (isTalentSlotKind(kind)) {
-    // Talents' granted lists and characteristic modifiers are applied once their data exists.
+    // Talents' characteristic modifiers are applied once their data exists.
     state.talentsTaken.add(id)
+    const grants = tables.talentGrants(id)
+    for (const key of grants.talentLists) state.talentLists.add(key)
+    for (const key of grants.abilityLists) state.abilityLists.add(key)
   } else if (isAbilitySlotKind(kind)) {
     state.abilitiesTaken.add(id)
   } else if (isUpgradeSlotKind(kind)) {
@@ -153,24 +216,6 @@ function increment(counts: Map<Id, number>, id: Id, amount: number, initial = 0)
   counts.set(id, (counts.get(id) ?? initial) + amount)
 }
 
-function talentRuleTables(tables: ValidatorTables) {
+export function talentRuleTables(tables: ValidatorTables) {
   return { talentLists: tables.talentLists, requirements: tables.talentRequirements }
-}
-
-/** A requirement in words, for the log. */
-function describe(requirement: Requirement, tables: ValidatorTables): string {
-  switch (requirement.kind) {
-    case 'level':
-      return `level ${requirement.min}`
-    case 'talent':
-      return tables.talents.find((talent) => talent.id === requirement.id)?.name ?? `talent ${requirement.id}`
-    case 'ability':
-      return `ability ${requirement.id}`
-    case 'characteristic': {
-      const characteristic = tables.characteristics.find((entry) => entry.id === requirement.id)
-      return `${characteristic?.abbreviation ?? `characteristic ${requirement.id}`} ${requirement.min}`
-    }
-    case 'anyOf':
-      return `one of (${requirement.of.map((option) => describe(option, tables)).join(', ')})`
-  }
 }

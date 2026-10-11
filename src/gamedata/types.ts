@@ -17,28 +17,36 @@ export interface TableEntry {
 }
 
 /**
+ * An entry the UI shows with a short label, such as on a ring node or an option icon. Every such
+ * table uses this same field, so the UI never needs to know which table an entry came from.
+ */
+export interface AbbreviatedEntry extends TableEntry {
+  /** At most 4 characters, e.g. `STR` or `HAP`. Defined in the data, never derived. */
+  readonly abbreviation: string
+}
+
+/**
  * What makes an increase-table entry (a characteristic or skill) available in `characteristicIncrease`
  * and `skillIncrease` slots (Availability Rules: Increase tables). First and second archetypes are
  * separate tables with overlapping IDs, so each has its own field. The Exemplar can improve every
- * entry. Talents that unlock entries are added once their data exists.
+ * entry.
  */
 export interface IncreaseAvailability {
   /** In every slot, if the build has one of these origins (the origin's "on advancement" bonus). */
   readonly availableForOrigins: readonly Id[]
   /** In every slot, if the build has one of these homeworlds. */
   readonly availableForHomeworlds: readonly Id[]
+  /** In every slot after one of these talents is taken, in any archetype. */
+  readonly availableForTalents: readonly Id[]
   /** Only in the slots of these first archetypes. */
   readonly availableForFirstArchetypes: readonly Id[]
   /** Only in the slots of these second archetypes. */
   readonly availableForSecondArchetypes: readonly Id[]
 }
 
-export interface CharacteristicEntry extends TableEntry, IncreaseAvailability {
-  /** Short label shown in the UI, e.g. `BS`. */
-  readonly abbreviation: string
-}
+export type CharacteristicEntry = AbbreviatedEntry & IncreaseAvailability
 
-export type SkillEntry = TableEntry & IncreaseAvailability
+export type SkillEntry = AbbreviatedEntry & IncreaseAvailability
 
 /** A homeworld or origin: modifies characteristics, and unlocks talent and ability lists for every slot. */
 export interface BackgroundEntry extends TableEntry {
@@ -57,7 +65,7 @@ export type DarkestHourEntry = TableEntry
  * A talent. `description` is its effect, as shown in the detail panel. Requirements, granted lists
  * and characteristic modifiers (Availability Rules: Talent table) are added once their data exists.
  */
-export interface TalentEntry extends TableEntry {
+export interface TalentEntry extends AbbreviatedEntry {
   readonly description: string
 }
 
@@ -83,7 +91,7 @@ export interface TalentList {
  * An ability that ability slots can take. `description` is its effect. Keystone abilities and
  * ultimates are keystone features instead, since they are granted, never chosen.
  */
-export interface AbilityEntry extends TableEntry {
+export interface AbilityEntry extends AbbreviatedEntry {
   readonly description: string
 }
 
@@ -94,15 +102,23 @@ export interface AbilityList {
   readonly abilityIds: readonly Id[]
 }
 
+/**
+ * One of an ultimate's 4 upgrades. Every ultimate's upgrade slots use the same 4 entries (Availability
+ * Rules: Ultimate upgrades), named after the ultimate where shown.
+ */
+export type UpgradeEntry = AbbreviatedEntry
+
 /** A keystone feature: fixed by an archetype's schema, never chosen. */
 export interface KeystoneFeatureEntry {
   readonly name: string
+  /** Same convention as `AbbreviatedEntry`. */
+  readonly abbreviation: string
   /** Whether it is the archetype's ultimate, such as Firearm Mastery, upgraded by its upgrade slots. */
   readonly isUltimate: boolean
 }
 
 /** An archetype: its level progression, and the lists that apply only to its own archetype slots. */
-export interface ArchetypeEntry extends TableEntry {
+export interface ArchetypeEntry extends AbbreviatedEntry {
   readonly schema: Schema
   readonly archetypeTalentList: ListKey
   readonly archetypeAbilityList: ListKey

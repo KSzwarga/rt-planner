@@ -11,7 +11,7 @@ What the user may pick is never decided here. Options come from the availability
 | [Archetype pick](#archetype-pick-screen)       | Choose the static choices, starting increases, and the first archetype, second archetype and Exemplar |
 | [Level-up](#level-up-screen)                   | Fill in one archetype's level progression                 |
 
-Selecting an archetype opens its level-up screen. **Return** goes back to the archetype pick screen.
+Clicking an archetype, or the Exemplar, that can be picked selects it and opens its level-up screen. Clicking the selected one opens it without changing anything. **Return** goes back to the archetype pick screen. Which screen is open isn't part of the build, so it isn't in the URL: a reload opens the archetype pick screen.
 
 Every edit on either screen follows the same path: `apply change → validate → store state → encode to URL` ([Architecture §6](./Architecture.md#6-validation)).
 
@@ -56,11 +56,10 @@ Three stacked rows, one per archetype tier:
 - **Locked** archetypes are shown in red and cannot be picked, using the same convention as unselectable talents.
 - A second archetype or Exemplar loaded from a link is shown as selected even while its row is locked. The rules for what a build may hold versus what the user may change are in [Architecture §6: Validation vs. editing](./Architecture.md#validation-vs-editing).
 - A row is drawn red when none of its archetypes can be picked, such as the second row before a first archetype is selected.
-- Clicking an archetype selects it, and clicking the selected one clears it. The Exemplar toggles the same way.
+- Clicking an archetype selects it and opens its level-up screen. Clicking the selected one only opens it, so an archetype is never cleared by a click. The Exemplar works the same way.
 - Selecting an archetype starts its level progression empty, and switching archetype clears the old one's choices ([decision 038](./decisions.md#038-selecting-an-archetype-resets-its-choices)). If the new first archetype doesn't allow the selected second archetype, the validator clears that too. The Exemplar stays.
-- A switch that would undo earlier choices first asks to confirm, in a modal dialog with **Cancel** (focused, and also Escape) and **Proceed**. When it asks is in [Architecture §6: Confirming archetype switches](./Architecture.md#confirming-archetype-switches).
-- Until the level-up screen exists, selecting an archetype only sets it, and doesn't open anything.
-- Emblems show the archetype's initial until real icons are drawn. On narrow screens (≤ 640px), each row wraps.
+- A switch that would undo earlier choices first asks to confirm, before opening the level-up screen, in a modal dialog with **Cancel** (focused, and also Escape) and **Proceed**. When it asks is in [Architecture §6: Confirming archetype switches](./Architecture.md#confirming-archetype-switches).
+- Emblems show the archetype's `abbreviation` (decision 046) until real icons are drawn. On narrow screens (≤ 640px), each row wraps.
 
 ## Level-up screen
 
@@ -97,3 +96,28 @@ Options that can't be picked yet are shown **in red** ([UI: shown vs. selectable
 ### 3. Detail panel
 
 Shows the option under the cursor or currently selected: icon, name, type, and description. If it has unmet requirements, a red **Requirements** box lists each one.
+
+### Behaviour
+
+- **Any slot, in any order.** Every node can be opened and filled first, such as a level 15 ability with nothing else chosen.
+- **Only earlier choices count.** A slot's options are worked out from the character state just before it: the static choices, plus every choice at an earlier level or earlier in the same level (`choiceSlotView`, `stateBeforeSlot`). So Heavy Armour Proficiency at level 5 is red if Strength only reaches 45 at level 10.
+- **Every pick revalidates the build.** Picking goes through the validator, so a later choice that no longer holds is nulled, and the nulling cascades forward.
+- **Talent and ability slots** show every talent from every list in the slot's pool, one group per list, in the order above. Talents whose requirements aren't met, or that were taken earlier, are shown in red: a red icon, as in the mock-up.
+- **Characteristic and skill slots** show what the archetype, origin, homeworld or an earlier talent unlocks. An entry that has reached the 2 / 4 / 6 cap is shown in red. Entries nothing unlocks aren't shown.
+- **Ultimate upgrade slots** show the 4 upgrades, with those taken earlier in red.
+- Red options can still be pointed at or focused, so the detail panel can show why they can't be picked. Clicking one does nothing.
+- **Clicking the current option clears it.**
+- **Empty nodes** are gray, with a faint icon for their kind (`SlotIcon`):
+
+  | Slot                                   | Icon                     |
+  | -------------------------------------- | ------------------------ |
+  | First and second archetype talent      | 8-pointed star           |
+  | Common talent                          | 8-pointed star under a ^ |
+  | Ultimate upgrade                       | Crown                    |
+  | Skill increase                         | Book                     |
+  | Characteristic increase                | Flexed arm               |
+  | Ability                                | No icon yet: "ABL"       |
+
+- **Filled nodes** show their choice's abbreviation, in their slot's colour (`--slot-*` in `index.css`): keystone feature amber, ability orange, ultimate upgrade gold, talent blue, common talent purple, skill green, characteristic increase red. A level has up to three slots, on up to three rings, at the same angle.
+- **The open slot's level** is shown under the archetype's name.
+- On screens ≤ 1100px wide the ring sits above the two panels. On screens ≤ 640px, everything stacks and Return moves to the top.

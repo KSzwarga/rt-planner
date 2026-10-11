@@ -69,7 +69,7 @@ describe('setExemplar', () => {
 
 describe('undoesEarlierChoices', () => {
   function first(id: number, allowedSecondArchetypeIds: number[]): FirstArchetypeEntry {
-    return { id, name: `First ${id}`, schema: {}, archetypeTalentList: '', archetypeAbilityList: '', allowedSecondArchetypeIds }
+    return { id, name: `First ${id}`, abbreviation: `F${id}`, schema: {}, archetypeTalentList: '', archetypeAbilityList: '', allowedSecondArchetypeIds }
   }
   // First 1 allows second 1. First 2 allows seconds 1 and 2. First 3 allows second 2.
   const firstArchetypes = [first(1, [1]), first(2, [1, 2]), first(3, [2])]

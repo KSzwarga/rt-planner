@@ -17,6 +17,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.assassin,
     name: 'Assassin',
+    abbreviation: 'ASN',
     archetypeTalentList: 'assassin',
     archetypeAbilityList: 'assassin',
     schema: {
@@ -45,6 +46,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.vanguard,
     name: 'Vanguard',
+    abbreviation: 'VAN',
     archetypeTalentList: 'vanguard',
     archetypeAbilityList: 'vanguard',
     schema: {
@@ -73,6 +75,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.bountyHunter,
     name: 'Bounty Hunter',
+    abbreviation: 'BH',
     archetypeTalentList: 'bountyHunter',
     archetypeAbilityList: 'bountyHunter',
     schema: {
@@ -101,6 +104,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.masterTactician,
     name: 'Master Tactician',
+    abbreviation: 'MT',
     archetypeTalentList: 'masterTactician',
     archetypeAbilityList: 'masterTactician',
     schema: {
@@ -129,6 +133,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.grandStrategist,
     name: 'Grand Strategist',
+    abbreviation: 'GS',
     archetypeTalentList: 'grandStrategist',
     archetypeAbilityList: 'grandStrategist',
     schema: {
@@ -157,6 +162,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.archMilitant,
     name: 'Arch-Militant',
+    abbreviation: 'AM',
     archetypeTalentList: 'archMilitant',
     archetypeAbilityList: 'archMilitant',
     schema: {
@@ -185,6 +191,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.executioner,
     name: 'Executioner',
+    abbreviation: 'EXE',
     archetypeTalentList: 'executioner',
     archetypeAbilityList: 'executioner',
     schema: {

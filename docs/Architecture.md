@@ -39,13 +39,15 @@ src/
 │   ├── types.ts              Entry types for every table
 │   ├── characteristics.ts    Characteristics (WS = 1 … FEL = 9), CHARACTERISTIC ID constants, what unlocks each
 │   ├── originIds.ts          ORIGIN ID constants (apart from origins.ts, to avoid an import cycle)
-│   ├── exemplar.ts           The Exemplar's schema (empty for now) and talent list
+│   ├── exemplar.ts           The Exemplar's schema (empty for now), talent list and EXEMPLAR display entry
+│   ├── upgrades.ts           The 4 upgrades every ultimate has
 │   ├── homeworlds.ts         Homeworlds: modifiers, granted talent and ability lists
 │   ├── origins.ts            Origins: same shape as homeworlds
 │   ├── keystoneFeatures.ts   Keystone features by key, and keystoneFeature() for schema slots
 │   ├── talents.ts            Talents: id, name, description (generated from the wiki)
 │   ├── talentLists.ts        Talent lists: key, name, talent IDs (generated from the wiki)
 │   ├── talentRequirements.ts Talent requirements by talent ID (hand-written, by talent name)
+│   ├── talentGrants.ts       Talent and ability lists each talent grants (hand-written, none yet)
 │   ├── abilities.ts          Abilities: id, name, description (generated from the wiki)
 │   ├── abilityLists.ts       Ability lists: key, name, ability IDs (generated from the wiki)
 │   ├── skills.ts             Skills (Athletics = 1 … Tech-Use = 13), SKILL ID constants, archetypes that improve each
@@ -76,8 +78,15 @@ src/
 │   ├── menuItems.ts          toMenuItems: groups table entries by name for NestedSelect
 │   ├── StartingIncreases.tsx One cell with two pips per characteristic
 │   ├── startingIncreaseEdits.ts  cycleStartingIncrease: what clicking a cell does
-│   └── useBuildInUrl.ts      The build as React state, synced with the URL fragment
-├── App.tsx, main.tsx         React entry point
+│   ├── useBuildInUrl.ts      The build as React state, synced with the URL fragment
+│   └── levelUp/              The level-up screen
+│       ├── LevelUpScreen.tsx Ring, option list and detail panel of one archetype
+│       ├── RadialProgression.tsx  The ring of nodes around the archetype emblem
+│       ├── radialLayout.ts   radialLayout: each slot's level angle and ring
+│       ├── slotView.ts       choiceSlotView: a slot's option groups, from the state before it
+│       ├── OptionList.tsx    The option groups of the open slot
+│       └── DetailPanel.tsx   The option under the cursor, with its unmet requirements
+├── App.tsx, main.tsx         React entry point. App holds the build and which screen is open
 test/                         Vitest unit and service tests, mirroring src/
 e2e/                          Playwright end-to-end tests
 ```
@@ -346,5 +355,7 @@ Because a nulled choice is never applied, anything later that depended on it fai
 A choice is legal only if its prerequisites were met **before** it, either at an earlier level or in an earlier slot of the same level. For example, at level 5 (`["characteristicIncrease", "firstArchetypeTalent"]`) the talent can rely on the characteristic increase taken just before it, but not the other way round. A prerequisite taken later does not count, even if the finished build would have it.
 
 The validator is pure: `(BuildPlan) → BuildPlan`. Running it on its own output changes nothing, so it is safe to run after every change.
+
+`stateBeforeSlot(plan, slot)` in `replay.ts` rebuilds the character state just before any slot of a validated build, from the static choices and every earlier choice. The level-up screen offers each slot exactly what the availability functions allow against that state, so it never offers what the validator would remove.
 
 **Implemented** (`src/validation/validator.ts`, `replay.ts`): the static choices, the starting characteristic increases and the archetypes are checked first. Then `initialState` builds the state, and `replayChoices` walks every archetype choice in level order, as above. Each slot kind uses its availability function from `src/availability`: increases (source and cap), talents (pool, requirements, no repeats), abilities (pool, no repeats) and ultimate upgrades (1–4, each once). Talents don't yet grant lists or characteristic modifiers, because that data doesn't exist. The UI runs the validator on every edit, so changing an origin, for example, nulls a later skill increase that only the old origin unlocked.

@@ -113,7 +113,7 @@ First and second archetypes are separate tables with overlapping IDs, so each ti
 - `availableForOrigins`, from each origin's *On advancement this Origin makes available* line on the [Origin](https://roguetrader.wiki.fextralife.com/Origin) and [Arbitrator](https://roguetrader.wiki.fextralife.com/Arbitrator) pages. For example, Commissar unlocks FEL and Coercion, and every Sanctioned Psyker unlocks WP and Lore (Warp), which no archetype offers.
 - `availableForHomeworlds`, empty for now: homeworlds don't unlock any characteristic or skill yet.
 
-`availableForTalents` is added once its data exists. The rule is `increaseUnavailableReason` / `availableIncreaseIds` in `src/availability/increases.ts`.
+`availableForTalents` is on every entry, empty for now: no talent unlocks a characteristic or skill yet. The rule is `increaseUnavailableReason` / `availableIncreaseIds` in `src/availability/increases.ts`.
 
 Example: Strength is available for the Soldier and Warrior first archetypes, the Vanguard, Arch-Militant and Executioner second archetypes, the Commissar origin, and the Void-born homeworld, or after the talent Mighty Shot has been taken.
 
@@ -257,7 +257,7 @@ interface TalentEntry {
 }
 ```
 
-**Implemented so far:** `src/gamedata/talents.ts` holds 546 talents with `id`, `name` and `description` (the effect text), generated from the [wiki's talents table](https://roguetrader.wiki.fextralife.com/Talents). IDs follow alphabetical order. Requirements live in their own file (see [Rule 2](#rule-2-requirements-which-shown-talents-are-selectable)). `grantsTalentLists`, `grantsAbilityLists` and `characteristicModifiers` are added once their data exists. The rule is `talentOptions` / `availableTalentIds` in `src/availability/talents.ts`.
+**Implemented so far:** `src/gamedata/talents.ts` holds 540 talents with `id`, `name` and `description` (the effect text), generated from the [wiki's talents table](https://roguetrader.wiki.fextralife.com/Talents). IDs follow alphabetical order. Requirements live in their own file (see [Rule 2](#rule-2-requirements-which-shown-talents-are-selectable)). The lists a talent grants live in `src/gamedata/talentGrants.ts`, keyed by talent ID like the requirements, and the replay applies them to every later slot. No talent grants lists yet. `characteristicModifiers` is added once its data exists. The rule is `talentOptions` / `availableTalentIds` in `src/availability/talents.ts`.
 
 ### Lists
 

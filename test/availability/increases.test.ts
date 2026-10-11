@@ -14,7 +14,7 @@ describe('increaseUnavailableReason', () => {
     // First archetype 1 and second archetype 1 are different archetypes.
     const entry = increaseEntry(3, { availableForSecondArchetypes: [1] })
     const state = characterState({ firstArchetype: firstArchetype(1), secondArchetype: secondArchetype(1) })
-    expect(increaseUnavailableReason(entry, noCounts, state, 'first')).toBe('not available to this archetype, origin or homeworld')
+    expect(increaseUnavailableReason(entry, noCounts, state, 'first')).toBe('not available to this archetype, origin, homeworld or earlier talents')
     expect(increaseUnavailableReason(entry, noCounts, state, 'second')).toBeNull()
   })
 

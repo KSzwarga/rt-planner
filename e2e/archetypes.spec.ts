@@ -8,28 +8,40 @@ function archetype(page: Page, row: string, name: string) {
   return page.getByRole('group', { name: row }).getByRole('button', { name })
 }
 
-test('picking a first archetype selects it, and clicking it again clears it', async ({ page }) => {
-  const warrior = archetype(page, 'First archetype', 'Warrior')
-  await warrior.click()
-  await expect(warrior).toHaveAttribute('aria-pressed', 'true')
+/** Picks an archetype, which opens its level-up screen, then returns to the archetype pick screen. */
+async function pick(page: Page, row: string, name: string) {
+  await archetype(page, row, name).click()
+  await page.getByRole('button', { name: 'Return' }).click()
+}
 
+test('picking an archetype selects it and opens its level-up screen', async ({ page }) => {
+  await archetype(page, 'First archetype', 'Warrior').click()
+
+  await expect(page.getByRole('heading', { name: 'Loadout // Archetype 01' })).toBeVisible()
+  await expect(page.getByText('Warrior', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Return' }).click()
+  await expect(archetype(page, 'First archetype', 'Warrior')).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('clicking the selected archetype opens it again, and keeps it selected', async ({ page }) => {
+  await pick(page, 'First archetype', 'Soldier')
   await archetype(page, 'First archetype', 'Soldier').click()
-  await expect(warrior).toHaveAttribute('aria-pressed', 'false')
+
+  await expect(page.getByRole('heading', { name: 'Loadout // Archetype 01' })).toBeVisible()
+  await page.getByRole('button', { name: 'Return' }).click()
   await expect(archetype(page, 'First archetype', 'Soldier')).toHaveAttribute('aria-pressed', 'true')
-
-  await archetype(page, 'First archetype', 'Soldier').click()
-  await expect(archetype(page, 'First archetype', 'Soldier')).toHaveAttribute('aria-pressed', 'false')
 })
 
 test('second archetypes unlock only when the first archetype allows them', async ({ page }) => {
   const executioner = archetype(page, 'Second archetype', 'Executioner')
   await expect(executioner).toBeDisabled()
 
-  await archetype(page, 'First archetype', 'Officer').click()
+  await pick(page, 'First archetype', 'Officer')
   await expect(executioner).toBeDisabled()
   await expect(archetype(page, 'Second archetype', 'Vanguard')).toBeEnabled()
 
-  await archetype(page, 'First archetype', 'Warrior').click()
+  await pick(page, 'First archetype', 'Warrior')
   await expect(executioner).toBeEnabled()
 })
 
@@ -42,27 +54,28 @@ test('every second archetype is listed, in table order', async ({ page }) => {
   }
 })
 
-test('the Exemplar unlocks once a second archetype is selected', async ({ page }) => {
+test('the Exemplar unlocks once a second archetype is selected, and opens its level-up screen', async ({ page }) => {
   const exemplar = archetype(page, 'Exemplar', 'Exemplar')
   await expect(exemplar).toBeDisabled()
 
-  await archetype(page, 'First archetype', 'Soldier').click()
-  await archetype(page, 'Second archetype', 'Bounty Hunter').click()
+  await pick(page, 'First archetype', 'Soldier')
+  await pick(page, 'Second archetype', 'Bounty Hunter')
   await exemplar.click()
-  await expect(exemplar).toHaveAttribute('aria-pressed', 'true')
 
-  await exemplar.click()
-  await expect(exemplar).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByRole('heading', { name: 'Loadout // Exemplar' })).toBeVisible()
+  await page.getByRole('button', { name: 'Return' }).click()
+  await expect(exemplar).toHaveAttribute('aria-pressed', 'true')
 })
 
 test("switching to a first archetype that doesn't allow the second clears it, but keeps the Exemplar", async ({ page }) => {
-  await archetype(page, 'First archetype', 'Soldier').click()
-  await archetype(page, 'Second archetype', 'Bounty Hunter').click()
-  await archetype(page, 'Exemplar', 'Exemplar').click()
+  await pick(page, 'First archetype', 'Soldier')
+  await pick(page, 'Second archetype', 'Bounty Hunter')
+  await pick(page, 'Exemplar', 'Exemplar')
 
   // Warrior allows Assassin, Vanguard, Arch-Militant and Executioner, but not Bounty Hunter.
   await archetype(page, 'First archetype', 'Warrior').click()
   await page.getByRole('dialog').getByRole('button', { name: 'Proceed' }).click()
+  await page.getByRole('button', { name: 'Return' }).click()
 
   await expect(archetype(page, 'Second archetype', 'Bounty Hunter')).toHaveAttribute('aria-pressed', 'false')
   // Still selected, though locked until a second archetype is picked again.
@@ -71,9 +84,9 @@ test("switching to a first archetype that doesn't allow the second clears it, bu
 })
 
 test('the selected archetypes survive a reload', async ({ page }) => {
-  await archetype(page, 'First archetype', 'Bladedancer').click()
-  await archetype(page, 'Second archetype', 'Executioner').click()
-  await archetype(page, 'Exemplar', 'Exemplar').click()
+  await pick(page, 'First archetype', 'Bladedancer')
+  await pick(page, 'Second archetype', 'Executioner')
+  await pick(page, 'Exemplar', 'Exemplar')
 
   await page.reload()
 
@@ -86,11 +99,11 @@ test.describe('switching archetype when it would undo choices', () => {
   const MESSAGE = 'Switching archetype might undo some of your previous choices, do you want to proceed?'
 
   test.beforeEach(async ({ page }) => {
-    await archetype(page, 'First archetype', 'Soldier').click()
-    await archetype(page, 'Second archetype', 'Bounty Hunter').click()
+    await pick(page, 'First archetype', 'Soldier')
+    await pick(page, 'Second archetype', 'Bounty Hunter')
   })
 
-  test('asks first, and Cancel keeps both archetypes', async ({ page }) => {
+  test('asks before switching, and Cancel keeps both archetypes on the pick screen', async ({ page }) => {
     // Warrior doesn't allow Bounty Hunter, so switching would clear it.
     await archetype(page, 'First archetype', 'Warrior').click()
 
@@ -101,6 +114,7 @@ test.describe('switching archetype when it would undo choices', () => {
 
     await dialog.getByRole('button', { name: 'Cancel' }).click()
     await expect(dialog).toBeHidden()
+    await expect(page.getByRole('heading', { name: 'Loadout // Archetype select' })).toBeVisible()
     await expect(archetype(page, 'First archetype', 'Soldier')).toHaveAttribute('aria-pressed', 'true')
     await expect(archetype(page, 'Second archetype', 'Bounty Hunter')).toHaveAttribute('aria-pressed', 'true')
   })
@@ -114,11 +128,12 @@ test.describe('switching archetype when it would undo choices', () => {
     await expect(archetype(page, 'First archetype', 'Soldier')).toHaveAttribute('aria-pressed', 'true')
   })
 
-  test('Proceed switches, and clears the second archetype', async ({ page }) => {
+  test('Proceed switches, opens the new archetype, and clears the second archetype', async ({ page }) => {
     await archetype(page, 'First archetype', 'Warrior').click()
     await page.getByRole('dialog').getByRole('button', { name: 'Proceed' }).click()
 
-    await expect(page.getByRole('dialog')).toBeHidden()
+    await expect(page.getByText('Warrior', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Return' }).click()
     await expect(archetype(page, 'First archetype', 'Warrior')).toHaveAttribute('aria-pressed', 'true')
     await expect(archetype(page, 'Second archetype', 'Bounty Hunter')).toHaveAttribute('aria-pressed', 'false')
   })
@@ -128,7 +143,6 @@ test.describe('switching archetype when it would undo choices', () => {
     await archetype(page, 'First archetype', 'Operative').click()
 
     await expect(page.getByRole('dialog')).toBeHidden()
-    await expect(archetype(page, 'First archetype', 'Operative')).toHaveAttribute('aria-pressed', 'true')
-    await expect(archetype(page, 'Second archetype', 'Bounty Hunter')).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByText('Operative', { exact: true })).toBeVisible()
   })
 })

@@ -1,0 +1,125 @@
+.option-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.option-list__title {
+  margin: 0 18px;
+  padding: 18px 0 12px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.option-list__scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 12px 12px;
+  overflow-y: auto;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.option-list__group {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option-list__divider {
+  display: flex;
+  align-items: center;
+  margin: 6px 8px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  span {
+    width: 5px;
+    height: 5px;
+    margin: 0 8px;
+    background: var(--line-strong);
+    transform: rotate(45deg);
+  }
+}
+
+.option-list__empty {
+  margin: 0;
+  padding: 18px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: var(--highlight);
+  }
+}
+
+.option--locked {
+  cursor: not-allowed;
+}
+
+.option--current {
+  border-color: var(--accent);
+  background: var(--highlight);
+}
+
+.option__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--emblem-bg);
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--accent);
+
+  .option--selectable & {
+    border-color: var(--accent);
+  }
+
+  .option--locked & {
+    border-color: var(--locked-line-strong);
+    background: var(--locked-emblem-bg);
+    color: var(--locked-text);
+  }
+}
+
+.option__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

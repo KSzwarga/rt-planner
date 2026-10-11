@@ -171,13 +171,14 @@ describe('skills', () => {
 })
 
 describe('characteristic and skill increases', () => {
-  /** The abbreviations or names of the increase-table entries an archetype can improve. */
+  /** The increase-table entries an archetype can improve: characteristics by abbreviation, skills by name. */
   function improvable(
-    entries: readonly (IncreaseAvailability & { readonly name: string; readonly abbreviation?: string })[],
+    entries: readonly (IncreaseAvailability & { readonly name: string; readonly abbreviation: string })[],
     tier: 'availableForFirstArchetypes' | 'availableForSecondArchetypes',
     archetypeId: number,
   ): string[] {
-    return entries.filter((entry) => entry[tier].includes(archetypeId)).map((entry) => entry.abbreviation ?? entry.name)
+    const label = entries === CHARACTERISTICS ? 'abbreviation' : 'name'
+    return entries.filter((entry) => entry[tier].includes(archetypeId)).map((entry) => entry[label])
   }
 
   // Restated per archetype, as the fandom wiki lists them, to check that the tables were transposed right.
@@ -415,3 +416,20 @@ describe('ability lists', () => {
 function normaliseName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
+
+describe('abbreviations', () => {
+  it.each([
+    ['characteristics', CHARACTERISTICS],
+    ['skills', SKILLS],
+    ['talents', TALENTS],
+    ['abilities', ABILITIES],
+    ['first archetypes', FIRST_ARCHETYPES],
+    ['second archetypes', SECOND_ARCHETYPES],
+    ['keystone features', Object.values(KEYSTONE_FEATURES)],
+  ] as const)('every entry of %s has one of 1 to 4 characters', (_, entries) => {
+    for (const { name, abbreviation } of entries) {
+      expect(abbreviation, name).toMatch(/^\S{1,4}$/)
+    }
+  })
+})
+

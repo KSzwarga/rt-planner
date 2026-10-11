@@ -30,6 +30,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Weapon Skill',
     availableForOrigins: [ORIGIN.arbitratorSubductor],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.warrior,
       FIRST_ARCHETYPE.operative,
@@ -50,6 +51,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Ballistic Skill',
     availableForOrigins: [ORIGIN.arbitratorVigilant],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.operative,
@@ -68,6 +70,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Strength',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.warrior,
@@ -85,6 +88,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Toughness',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.warrior,
       FIRST_ARCHETYPE.officer,
@@ -102,6 +106,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Agility',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [
       FIRST_ARCHETYPE.soldier,
       FIRST_ARCHETYPE.warrior,
@@ -120,6 +125,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Intelligence',
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.operative],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.assassin,
@@ -133,6 +139,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
     name: 'Perception',
     availableForOrigins: [ORIGIN.crimeLord, ORIGIN.navyOfficer],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.soldier, FIRST_ARCHETYPE.operative],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.assassin,
@@ -156,6 +163,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
       ORIGIN.arbitratorSubductor,
     ],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.officer],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.vanguard,
@@ -174,6 +182,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
       ORIGIN.arbitratorCastigator,
     ],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.officer],
     availableForSecondArchetypes: [
       SECOND_ARCHETYPE.vanguard,

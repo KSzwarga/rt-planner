@@ -28,6 +28,7 @@ export function firstArchetype(id: number, archetypeTalentList = `first${id}`): 
   return {
     id,
     name: `First ${id}`,
+    abbreviation: `F${id}`,
     schema: {},
     archetypeTalentList,
     archetypeAbilityList: archetypeTalentList,
@@ -36,7 +37,7 @@ export function firstArchetype(id: number, archetypeTalentList = `first${id}`): 
 }
 
 export function secondArchetype(id: number, archetypeTalentList = `second${id}`): SecondArchetypeEntry {
-  return { id, name: `Second ${id}`, schema: {}, archetypeTalentList, archetypeAbilityList: archetypeTalentList }
+  return { id, name: `Second ${id}`, abbreviation: `S${id}`, schema: {}, archetypeTalentList, archetypeAbilityList: archetypeTalentList }
 }
 
 export function increaseEntry(id: number, fields: Partial<IncreaseAvailability> = {}): IncreaseAvailability & { id: number } {
@@ -44,6 +45,7 @@ export function increaseEntry(id: number, fields: Partial<IncreaseAvailability> 
     id,
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [],
     availableForSecondArchetypes: [],
     ...fields,

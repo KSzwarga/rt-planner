@@ -1,18 +1,23 @@
+import type { ArchetypeTier } from '../availability/characterState'
 import { CHARACTERISTICS } from '../gamedata/characteristics'
 import { DARKEST_HOURS } from '../gamedata/darkestHours'
 import { HOMEWORLDS } from '../gamedata/homeworlds'
 import { ORIGINS } from '../gamedata/origins'
 import { TRIUMPHS } from '../gamedata/triumphs'
+import type { BuildPlan } from '../model/buildPlan'
 import { ArchetypeRows } from './ArchetypeRows'
 import { NestedSelect } from './NestedSelect'
 import { StartingIncreases } from './StartingIncreases'
-import { useBuildInUrl } from './useBuildInUrl'
 import './ArchetypePickScreen.css'
 
-/** The archetype pick screen (UI Design): static choices, starting increases and archetypes. */
-export function ArchetypePickScreen() {
-  const [build, update] = useBuildInUrl()
+interface ArchetypePickScreenProps {
+  readonly build: BuildPlan
+  readonly onChange: (change: Partial<BuildPlan>) => void
+  readonly onOpenLevelUp: (tier: ArchetypeTier) => void
+}
 
+/** The archetype pick screen (UI Design): static choices, starting increases and archetypes. */
+export function ArchetypePickScreen({ build, onChange: update, onOpenLevelUp }: ArchetypePickScreenProps) {
   return (
     <main className="archetype-pick">
       <h1 className="archetype-pick__title">Loadout // Archetype select</h1>
@@ -53,7 +58,7 @@ export function ArchetypePickScreen() {
       </section>
 
       <section className="archetype-pick__archetypes" aria-label="Archetypes">
-        <ArchetypeRows build={build} onChange={update} />
+        <ArchetypeRows build={build} onChange={update} onOpenLevelUp={onOpenLevelUp} />
       </section>
     </main>
   )

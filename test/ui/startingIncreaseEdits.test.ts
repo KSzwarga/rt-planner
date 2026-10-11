@@ -8,6 +8,7 @@ const characteristics: readonly CharacteristicEntry[] = [1, 2, 3, 4].map((id) =>
   name: `Characteristic ${id}`,
   availableForOrigins: [],
   availableForHomeworlds: [],
+  availableForTalents: [],
   availableForFirstArchetypes: [],
   availableForSecondArchetypes: [],
 }))

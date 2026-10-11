@@ -1,5 +1,7 @@
 import { type ReactNode, useState } from 'react'
 import { availableSecondArchetypeIds } from '../availability/archetypes'
+import type { ArchetypeTier } from '../availability/characterState'
+import { EXEMPLAR } from '../gamedata/exemplar'
 import { FIRST_ARCHETYPES } from '../gamedata/firstArchetypes'
 import { SECOND_ARCHETYPES } from '../gamedata/secondArchetypes'
 import type { BuildPlan } from '../model/buildPlan'
@@ -10,25 +12,35 @@ import './ArchetypeRows.css'
 interface ArchetypeRowsProps {
   readonly build: BuildPlan
   readonly onChange: (change: Partial<BuildPlan>) => void
+  /** Opens the level-up screen of one of the build's archetypes. */
+  readonly onOpenLevelUp: (tier: ArchetypeTier) => void
+}
+
+/** A selection waiting for the user to confirm it, and the level-up screen to open after it. */
+interface PendingSwitch {
+  readonly change: Partial<BuildPlan>
+  readonly tier: ArchetypeTier
 }
 
 /**
  * The three archetype rows of the archetype pick screen (UI Design: Archetype rows). Clicking an
- * archetype selects it, and clicking the selected one clears it. The user may change the second
- * archetype only to one the first allows, and the Exemplar only once a second archetype is
- * selected (Architecture §6: Validation vs. editing).
+ * archetype selects it and opens its level-up screen. Clicking the selected one just opens it. The
+ * user may change the second archetype only to one the first allows, and the Exemplar only once a
+ * second archetype is selected (Architecture §6: Validation vs. editing).
  *
  * A switch that would undo earlier choices waits for the user to confirm it (`undoesEarlierChoices`).
  */
-export function ArchetypeRows({ build, onChange }: ArchetypeRowsProps) {
-  const [pendingChange, setPendingChange] = useState<Partial<BuildPlan> | null>(null)
+export function ArchetypeRows({ build, onChange, onOpenLevelUp }: ArchetypeRowsProps) {
+  const [pending, setPending] = useState<PendingSwitch | null>(null)
 
-  function requestChange(change: Partial<BuildPlan>) {
+  /** Applies the selection, unless it needs confirming first, then opens the level-up screen. */
+  function selectAndOpen(change: Partial<BuildPlan>, tier: ArchetypeTier) {
     if (undoesEarlierChoices(build, change)) {
-      setPendingChange(change)
-    } else {
-      onChange(change)
+      setPending({ change, tier })
+      return
     }
+    if (Object.keys(change).length > 0) onChange(change)
+    onOpenLevelUp(tier)
   }
 
   const firstArchetype = FIRST_ARCHETYPES.find((entry) => entry.id === build.firstArchetypeId) ?? null
@@ -43,10 +55,10 @@ export function ArchetypeRows({ build, onChange }: ArchetypeRowsProps) {
           return (
             <ArchetypeButton
               key={archetype.id}
-              name={archetype.name}
+              archetype={archetype}
               isSelected={isSelected}
               isLocked={false}
-              onClick={() => requestChange(selectFirstArchetype(build, isSelected ? null : archetype.id))}
+              onClick={() => selectAndOpen(selectFirstArchetype(build, archetype.id), 'first')}
             />
           )
         })}
@@ -58,10 +70,10 @@ export function ArchetypeRows({ build, onChange }: ArchetypeRowsProps) {
           return (
             <ArchetypeButton
               key={archetype.id}
-              name={archetype.name}
+              archetype={archetype}
               isSelected={isSelected}
               isLocked={!allowedSecondIds.includes(archetype.id)}
-              onClick={() => requestChange(selectSecondArchetype(build, isSelected ? null : archetype.id))}
+              onClick={() => selectAndOpen(selectSecondArchetype(build, archetype.id), 'second')}
             />
           )
         })}
@@ -70,23 +82,26 @@ export function ArchetypeRows({ build, onChange }: ArchetypeRowsProps) {
       <ArchetypeRow label="Exemplar" isLocked={isExemplarLocked} isExemplar>
         <Wing />
         <ArchetypeButton
-          name="Exemplar"
+          archetype={EXEMPLAR}
           isSelected={build.isExemplar}
           isLocked={isExemplarLocked}
-          onClick={() => onChange(setExemplar(build, !build.isExemplar))}
+          onClick={() => selectAndOpen(setExemplar(build, true), 'exemplar')}
         />
         <Wing isMirrored />
       </ArchetypeRow>
 
       <ConfirmDialog
-        isOpen={pendingChange !== null}
+        isOpen={pending !== null}
         message="Switching archetype might undo some of your previous choices, do you want to proceed?"
         confirmLabel="Proceed"
         onConfirm={() => {
-          if (pendingChange) onChange(pendingChange)
-          setPendingChange(null)
+          if (pending) {
+            onChange(pending.change)
+            onOpenLevelUp(pending.tier)
+          }
+          setPending(null)
         }}
-        onCancel={() => setPendingChange(null)}
+        onCancel={() => setPending(null)}
       />
     </div>
   )
@@ -116,25 +131,25 @@ function ArchetypeRow({ label, isLocked, isCompact = false, isExemplar = false, 
 }
 
 interface ArchetypeButtonProps {
-  readonly name: string
+  readonly archetype: { readonly name: string; readonly abbreviation: string }
   readonly isSelected: boolean
   /** Locked archetypes can't be picked. One loaded from a link still shows as selected. */
   readonly isLocked: boolean
   readonly onClick: () => void
 }
 
-function ArchetypeButton({ name, isSelected, isLocked, onClick }: ArchetypeButtonProps) {
+function ArchetypeButton({ archetype, isSelected, isLocked, onClick }: ArchetypeButtonProps) {
   const classNames = ['archetype']
   if (isSelected) classNames.push('archetype--selected')
   if (isLocked) classNames.push('archetype--locked')
 
   return (
     <button type="button" className={classNames.join(' ')} aria-pressed={isSelected} disabled={isLocked} onClick={onClick}>
-      {/* Placeholder emblem: the mock-up's icons are concepts, so it shows the initial for now. */}
+      {/* Placeholder emblem: the mock-up's icons are concepts, so it shows the abbreviation for now. */}
       <span className="archetype__emblem" aria-hidden="true">
-        {name.charAt(0)}
+        {archetype.abbreviation}
       </span>
-      <span className="archetype__name">{name}</span>
+      <span className="archetype__name">{archetype.name}</span>
     </button>
   )
 }

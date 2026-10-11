@@ -17,8 +17,10 @@ function skill(id: number): SkillEntry {
   return {
     id,
     name: `Skill ${id}`,
+    abbreviation: `S${id}`,
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [1, 2],
     availableForSecondArchetypes: [1, 2],
   }
@@ -28,6 +30,7 @@ function firstArchetype(id: number, allowedSecondArchetypeIds: number[]): FirstA
   return {
     id,
     name: `First ${id}`,
+    abbreviation: `F${id}`,
     schema: { 1: ['skillIncrease'] },
     archetypeTalentList: 'first',
     archetypeAbilityList: 'first',
@@ -36,7 +39,7 @@ function firstArchetype(id: number, allowedSecondArchetypeIds: number[]): FirstA
 }
 
 function secondArchetype(id: number): SecondArchetypeEntry {
-  return { id, name: `Second ${id}`, schema: { 16: ['skillIncrease'] }, archetypeTalentList: 'second', archetypeAbilityList: 'second' }
+  return { id, name: `Second ${id}`, abbreviation: `S${id}`, schema: { 16: ['skillIncrease'] }, archetypeTalentList: 'second', archetypeAbilityList: 'second' }
 }
 
 const tables: ValidatorTables = {
@@ -46,6 +49,7 @@ const tables: ValidatorTables = {
     name: `Characteristic ${id}`,
     availableForOrigins: [],
     availableForHomeworlds: [],
+    availableForTalents: [],
     availableForFirstArchetypes: [],
     availableForSecondArchetypes: [],
   })),
@@ -60,8 +64,10 @@ const tables: ValidatorTables = {
   talents: [],
   talentLists: [],
   talentRequirements: () => [],
+  talentGrants: () => ({ talentLists: [], abilityLists: [] }),
   abilities: [],
   abilityLists: [],
+  upgrades: [],
 }
 
 function build(fields: Partial<BuildPlan>): BuildPlan {
