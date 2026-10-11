@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ArchetypeTier } from '../../availability/characterState'
 import { EXEMPLAR } from '../../gamedata/exemplar'
 import { KEYSTONE_FEATURES } from '../../gamedata/keystoneFeatures'
+import type { ArchetypeEntry } from '../../gamedata/types'
 import type { BuildPlan, Id } from '../../model/buildPlan'
 import { isKeystoneFeature } from '../../model/slotKinds'
 import { CHOICES_FIELD } from '../../validation/replay'
@@ -101,13 +102,14 @@ export function LevelUpScreen({ build, tier, onChange, onReturn }: LevelUpScreen
 }
 
 /** The archetype being levelled up, as its emblem shows it. */
-function archetypeShown(build: BuildPlan, tier: ArchetypeTier): { name: string; abbreviation: string } {
+function archetypeShown(build: BuildPlan, tier: ArchetypeTier): Pick<ArchetypeEntry, 'name' | 'icon'> {
   if (tier === 'exemplar') return EXEMPLAR
   const archetype =
     tier === 'first'
       ? GAME_TABLES.firstArchetypes.find((entry) => entry.id === build.firstArchetypeId)
       : GAME_TABLES.secondArchetypes.find((entry) => entry.id === build.secondArchetypeId)
-  return archetype ?? { name: '', abbreviation: '' }
+  if (!archetype) throw new Error(`The build has no ${tier} archetype`)
+  return archetype
 }
 
 function optionDetail(option: OptionView | null): DetailView | null {

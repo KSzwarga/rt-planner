@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
 import { KEYSTONE_FEATURES } from '../../gamedata/keystoneFeatures'
+import type { ArchetypeEntry } from '../../gamedata/types'
 import type { Choice } from '../../model/buildPlan'
 import type { Schema } from '../../model/schema'
 import { isKeystoneFeature } from '../../model/slotKinds'
 import { nodePosition, RING_RADII, type RadialNode, radialLayout } from './radialLayout'
+import { ArchetypeIcon } from '../ArchetypeIcon'
 import { SlotIcon } from './SlotIcon'
 import { choiceEntry, type SlotCategory, slotCategory, slotTitle } from './slotView'
 import './RadialProgression.css'
@@ -17,7 +19,7 @@ interface RadialProgressionProps {
   readonly schema: Schema
   readonly choices: readonly (Choice | null)[]
   /** The archetype at the centre of the ring. */
-  readonly archetype: { readonly name: string; readonly abbreviation: string }
+  readonly archetype: Pick<ArchetypeEntry, 'name' | 'icon'>
   readonly selection: NodeSelection | null
   readonly onSelect: (selection: NodeSelection) => void
 }
@@ -63,12 +65,12 @@ export function RadialProgression({ schema, choices, archetype, selection, onSel
       </svg>
 
       <div className="radial__centre">
-        <svg className="radial__emblem" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-          <polygon points="50,8 86,29 86,71 50,92 14,71 14,29" />
-          <text x="50" y="50" dominantBaseline="central" textAnchor="middle">
-            {archetype.abbreviation}
-          </text>
-        </svg>
+        <div className="radial__emblem">
+          <svg className="radial__hexagon" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <polygon points="50,8 86,29 86,71 50,92 14,71 14,29" />
+          </svg>
+          <ArchetypeIcon name={archetype.icon} className="radial__icon" />
+        </div>
         <p className="radial__name">{archetype.name}</p>
         {selectedLevel !== undefined && <p className="radial__level">Level {selectedLevel}</p>}
       </div>

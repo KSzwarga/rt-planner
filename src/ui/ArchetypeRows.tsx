@@ -4,7 +4,9 @@ import type { ArchetypeTier } from '../availability/characterState'
 import { EXEMPLAR } from '../gamedata/exemplar'
 import { FIRST_ARCHETYPES } from '../gamedata/firstArchetypes'
 import { SECOND_ARCHETYPES } from '../gamedata/secondArchetypes'
+import type { ArchetypeEntry } from '../gamedata/types'
 import type { BuildPlan } from '../model/buildPlan'
+import { ArchetypeIcon } from './ArchetypeIcon'
 import { selectFirstArchetype, selectSecondArchetype, setExemplar, undoesEarlierChoices } from './archetypeEdits'
 import { ConfirmDialog } from './ConfirmDialog'
 import './ArchetypeRows.css'
@@ -131,7 +133,7 @@ function ArchetypeRow({ label, isLocked, isCompact = false, isExemplar = false, 
 }
 
 interface ArchetypeButtonProps {
-  readonly archetype: { readonly name: string; readonly abbreviation: string }
+  readonly archetype: Pick<ArchetypeEntry, 'name' | 'icon'>
   readonly isSelected: boolean
   /** Locked archetypes can't be picked. One loaded from a link still shows as selected. */
   readonly isLocked: boolean
@@ -145,9 +147,8 @@ function ArchetypeButton({ archetype, isSelected, isLocked, onClick }: Archetype
 
   return (
     <button type="button" className={classNames.join(' ')} aria-pressed={isSelected} disabled={isLocked} onClick={onClick}>
-      {/* Placeholder emblem: the mock-up's icons are concepts, so it shows the abbreviation for now. */}
       <span className="archetype__emblem" aria-hidden="true">
-        {archetype.abbreviation}
+        <ArchetypeIcon name={archetype.icon} className="archetype__icon" />
       </span>
       <span className="archetype__name">{archetype.name}</span>
     </button>

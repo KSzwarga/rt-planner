@@ -5,7 +5,7 @@ import type { FirstArchetypeEntry } from '../../src/gamedata/types'
 const soldier: FirstArchetypeEntry = {
   id: 1,
   name: 'Soldier',
-  abbreviation: 'SOL',
+  icon: 'gun',
   schema: {},
   archetypeTalentList: 'soldier',
   archetypeAbilityList: 'soldier',

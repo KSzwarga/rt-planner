@@ -16,7 +16,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
   {
     id: FIRST_ARCHETYPE.soldier,
     name: 'Soldier',
-    abbreviation: 'SOL',
+    icon: 'gun',
     archetypeTalentList: 'soldier',
     archetypeAbilityList: 'soldier',
     allowedSecondArchetypeIds: [
@@ -45,7 +45,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
   {
     id: FIRST_ARCHETYPE.warrior,
     name: 'Warrior',
-    abbreviation: 'WAR',
+    icon: 'sword',
     archetypeTalentList: 'warrior',
     archetypeAbilityList: 'warrior',
     allowedSecondArchetypeIds: [
@@ -75,7 +75,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
   {
     id: FIRST_ARCHETYPE.operative,
     name: 'Operative',
-    abbreviation: 'OPR',
+    icon: 'sniperRifle',
     archetypeTalentList: 'operative',
     archetypeAbilityList: 'operative',
     allowedSecondArchetypeIds: [
@@ -105,7 +105,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
   {
     id: FIRST_ARCHETYPE.officer,
     name: 'Officer',
-    abbreviation: 'OFF',
+    icon: 'crown',
     archetypeTalentList: 'officer',
     archetypeAbilityList: 'officer',
     allowedSecondArchetypeIds: [
@@ -134,7 +134,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
   {
     id: FIRST_ARCHETYPE.bladedancer,
     name: 'Bladedancer',
-    abbreviation: 'BLD',
+    icon: 'crossedBlades',
     archetypeTalentList: 'bladedancer',
     archetypeAbilityList: 'bladedancer',
     allowedSecondArchetypeIds: [

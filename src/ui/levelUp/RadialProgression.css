@@ -72,21 +72,31 @@
 }
 
 .radial__emblem {
+  position: relative;
+  display: grid;
+  place-items: center;
   width: 46%;
+  aspect-ratio: 1;
+  color: var(--ring);
+}
+
+.radial__hexagon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: visible;
 
   polygon {
     fill: none;
-    stroke: var(--ring);
+    stroke: currentColor;
     stroke-width: 3;
   }
+}
 
-  text {
-    fill: var(--ring);
-    font-family: var(--sans);
-    font-size: 40px;
-    font-weight: 700;
-  }
+.radial__icon {
+  width: 54%;
+  height: 54%;
 }
 
 .radial__name {

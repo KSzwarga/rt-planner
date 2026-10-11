@@ -17,7 +17,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.assassin,
     name: 'Assassin',
-    abbreviation: 'ASN',
+    icon: 'dagger',
     archetypeTalentList: 'assassin',
     archetypeAbilityList: 'assassin',
     schema: {
@@ -46,7 +46,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.vanguard,
     name: 'Vanguard',
-    abbreviation: 'VAN',
+    icon: 'shield',
     archetypeTalentList: 'vanguard',
     archetypeAbilityList: 'vanguard',
     schema: {
@@ -75,7 +75,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.bountyHunter,
     name: 'Bounty Hunter',
-    abbreviation: 'BH',
+    icon: 'crosshair',
     archetypeTalentList: 'bountyHunter',
     archetypeAbilityList: 'bountyHunter',
     schema: {
@@ -104,7 +104,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.masterTactician,
     name: 'Master Tactician',
-    abbreviation: 'MT',
+    icon: 'star',
     archetypeTalentList: 'masterTactician',
     archetypeAbilityList: 'masterTactician',
     schema: {
@@ -133,7 +133,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.grandStrategist,
     name: 'Grand Strategist',
-    abbreviation: 'GS',
+    icon: 'rook',
     archetypeTalentList: 'grandStrategist',
     archetypeAbilityList: 'grandStrategist',
     schema: {
@@ -162,7 +162,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.archMilitant,
     name: 'Arch-Militant',
-    abbreviation: 'AM',
+    icon: 'swordAndGun',
     archetypeTalentList: 'archMilitant',
     archetypeAbilityList: 'archMilitant',
     schema: {
@@ -191,7 +191,7 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
   {
     id: SECOND_ARCHETYPE.executioner,
     name: 'Executioner',
-    abbreviation: 'EXE',
+    icon: 'axe',
     archetypeTalentList: 'executioner',
     archetypeAbilityList: 'executioner',
     schema: {

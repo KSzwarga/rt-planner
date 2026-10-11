@@ -118,7 +118,24 @@ export interface KeystoneFeatureEntry {
 }
 
 /** An archetype: its level progression, and the lists that apply only to its own archetype slots. */
-export interface ArchetypeEntry extends AbbreviatedEntry {
+/** The icon an archetype or the Exemplar is shown with (`ArchetypeIcon`). */
+export type ArchetypeIconName =
+  | 'gun'
+  | 'sword'
+  | 'crossedBlades'
+  | 'axe'
+  | 'crown'
+  | 'star'
+  | 'rook'
+  | 'sniperRifle'
+  | 'shield'
+  | 'dagger'
+  | 'swordAndGun'
+  | 'crosshair'
+  | 'sparkle'
+
+export interface ArchetypeEntry extends TableEntry {
+  readonly icon: ArchetypeIconName
   readonly schema: Schema
   readonly archetypeTalentList: ListKey
   readonly archetypeAbilityList: ListKey

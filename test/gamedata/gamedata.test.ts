@@ -5,6 +5,7 @@ import { ABILITY_LISTS } from '../../src/gamedata/abilityLists'
 import { CHARACTERISTIC, CHARACTERISTICS } from '../../src/gamedata/characteristics'
 import { DARKEST_HOURS } from '../../src/gamedata/darkestHours'
 import { FIRST_ARCHETYPE, FIRST_ARCHETYPES } from '../../src/gamedata/firstArchetypes'
+import { EXEMPLAR } from '../../src/gamedata/exemplar'
 import { HOMEWORLDS } from '../../src/gamedata/homeworlds'
 import { KEYSTONE_FEATURES } from '../../src/gamedata/keystoneFeatures'
 import { ORIGIN } from '../../src/gamedata/originIds'
@@ -423,13 +424,18 @@ describe('abbreviations', () => {
     ['skills', SKILLS],
     ['talents', TALENTS],
     ['abilities', ABILITIES],
-    ['first archetypes', FIRST_ARCHETYPES],
-    ['second archetypes', SECOND_ARCHETYPES],
     ['keystone features', Object.values(KEYSTONE_FEATURES)],
   ] as const)('every entry of %s has one of 1 to 4 characters', (_, entries) => {
     for (const { name, abbreviation } of entries) {
       expect(abbreviation, name).toMatch(/^\S{1,4}$/)
     }
+  })
+})
+
+describe('archetype icons', () => {
+  it('differ for every archetype and the Exemplar', () => {
+    const icons = [...FIRST_ARCHETYPES, ...SECOND_ARCHETYPES, EXEMPLAR].map((archetype) => archetype.icon)
+    expect(new Set(icons).size).toBe(icons.length)
   })
 })
 

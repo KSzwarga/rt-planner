@@ -72,6 +72,7 @@ src/
 ├── ui/                       React screens and components (UI Design)
 │   ├── ArchetypePickScreen.tsx  Archetype pick screen: static choices, starting increases, archetypes
 │   ├── ArchetypeRows.tsx     The first, second and Exemplar rows
+│   ├── ArchetypeIcon.tsx     Each archetype's line icon
 │   ├── archetypeEdits.ts     selectFirstArchetype, selectSecondArchetype, setExemplar, undoesEarlierChoices
 │   ├── ConfirmDialog.tsx     Modal yes / no question on the native <dialog>
 │   ├── NestedSelect.tsx      Dropdown over a table, with `Group: Option` entries as nested menus

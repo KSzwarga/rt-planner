@@ -1,20 +1,5 @@
 import type { ReactNode } from 'react'
-
-/** The icon of each archetype, and the Exemplar's. Not used yet: archetype entries still show their abbreviation. */
-export type ArchetypeIconName =
-  | 'gun'
-  | 'sword'
-  | 'crossedBlades'
-  | 'axe'
-  | 'crown'
-  | 'star'
-  | 'rook'
-  | 'sniperRifle'
-  | 'shield'
-  | 'dagger'
-  | 'swordAndGun'
-  | 'crosshair'
-  | 'sparkle'
+import type { ArchetypeIconName } from '../gamedata/types'
 
 const PATHS: Record<ArchetypeIconName, readonly string[]> = {
   gun: ['M3 7h17v4h-8.5l-1.6 7H5.6l1.6-7H3z', 'M11.5 11c.3 1.6 1.3 2.3 2.8 2.3V11', 'M20 9h1.5'],
@@ -67,7 +52,7 @@ const PATHS: Record<ArchetypeIconName, readonly string[]> = {
   sparkle: ['M12 3v5M12 16v5M3 12h5M16 12h5', 'M5.6 5.6l3 3M15.4 15.4l3 3M18.4 5.6l-3 3M8.6 15.4l-3 3'],
 }
 
-/** An archetype's line icon. It takes the text colour. */
+/** An archetype's line icon (UI Design: Archetype rows). It takes the text colour. */
 export function ArchetypeIcon({ name, className }: { readonly name: ArchetypeIconName; readonly className?: string }) {
   const paths: ReactNode = PATHS[name].map((d) => <path key={d} d={d} />)
   return (

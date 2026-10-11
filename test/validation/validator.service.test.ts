@@ -30,7 +30,7 @@ function firstArchetype(id: number, allowedSecondArchetypeIds: number[]): FirstA
   return {
     id,
     name: `First ${id}`,
-    abbreviation: `F${id}`,
+    icon: 'gun',
     schema: { 1: ['skillIncrease'] },
     archetypeTalentList: 'first',
     archetypeAbilityList: 'first',
@@ -39,7 +39,7 @@ function firstArchetype(id: number, allowedSecondArchetypeIds: number[]): FirstA
 }
 
 function secondArchetype(id: number): SecondArchetypeEntry {
-  return { id, name: `Second ${id}`, abbreviation: `S${id}`, schema: { 16: ['skillIncrease'] }, archetypeTalentList: 'second', archetypeAbilityList: 'second' }
+  return { id, name: `Second ${id}`, icon: 'dagger', schema: { 16: ['skillIncrease'] }, archetypeTalentList: 'second', archetypeAbilityList: 'second' }
 }
 
 const tables: ValidatorTables = {

@@ -390,3 +390,12 @@ A chronological log of decisions made during development that affect the archite
 - **Context:** The level-up screen needs short labels for nodes and option icons. Deriving them from names in code needs a different rule per table, and names that start alike collide: Operative and Officer were both "O".
 - **Decision:** Every table the UI shows with a short label has an `abbreviation` field (`AbbreviatedEntry`): characteristics, skills, talents, abilities, archetypes, keystone features, the Exemplar (`EXEMPLAR`) and a new upgrade table (`UPGRADES`, U1–U4). No code derives a short label. Talents and abilities get a starting abbreviation (their initials) when the generator writes the data file, and it can be edited there. The others are written by hand. A data test checks that every abbreviation has 1 to 4 characters. Upgrade slots validate against `UPGRADES`, like every other slot kind against its table.
 - **Consequences:** The UI reads `entry.abbreviation` the same way for every kind, through one table lookup per slot kind (`optionTable`). Archetype emblems show their abbreviation (SOL, OPR, OFF…).
+
+## 047. Archetypes are shown with icons
+
+- **Date:** 2026-10-12
+- **Status:** Accepted
+- **Context:** Archetype emblems showed the archetype's `abbreviation` (decision 046), which reads poorly as an emblem.
+- **Decision:** Each archetype entry, and `EXEMPLAR`, names its icon in an `icon` field (`ArchetypeIconName`), following decision 046's rule that what an entry is shown with is defined in its data. `ArchetypeIcon` draws the named line icon, in the archetype pick screen's emblems and at the centre of the level-up screen's ring. Archetypes no longer have an `abbreviation`. This replaces that part of decision 046, and the abbreviation convention still holds for every other shown table. The Exemplar's starburst follows the mock-up. A data test checks that no two archetypes share an icon.
+- **Consequences:** Operative and Officer, and the other archetypes, are told apart at a glance. Adding an archetype means choosing, or drawing, an icon for it.
+

@@ -59,7 +59,17 @@ Three stacked rows, one per archetype tier:
 - Clicking an archetype selects it and opens its level-up screen. Clicking the selected one only opens it, so an archetype is never cleared by a click. The Exemplar works the same way.
 - Selecting an archetype starts its level progression empty, and switching archetype clears the old one's choices ([decision 038](./decisions.md#038-selecting-an-archetype-resets-its-choices)). If the new first archetype doesn't allow the selected second archetype, the validator clears that too. The Exemplar stays.
 - A switch that would undo earlier choices first asks to confirm, before opening the level-up screen, in a modal dialog with **Cancel** (focused, and also Escape) and **Proceed**. When it asks is in [Architecture §6: Confirming archetype switches](./Architecture.md#confirming-archetype-switches).
-- Emblems show the archetype's `abbreviation` (decision 046) until real icons are drawn. On narrow screens (≤ 640px), each row wraps.
+- Emblems show the archetype's icon (`ArchetypeIcon`, named by the archetype's `icon` field). The level-up screen shows the same icon in the hexagon at the centre of its ring.
+
+  | Archetype        | Icon                  | Archetype        | Icon               |
+  | ---------------- | --------------------- | ---------------- | ------------------ |
+  | Soldier          | Gun                   | Assassin         | Dagger             |
+  | Warrior          | Sword                 | Vanguard         | Shield             |
+  | Operative        | Sniper rifle          | Bounty Hunter    | Crosshair          |
+  | Officer          | Crown                 | Master Tactician | Star               |
+  | Bladedancer      | Two crossed blades    | Grand Strategist | Rook (chess piece) |
+  | Exemplar         | Starburst             | Arch-Militant    | Sword and gun crossed |
+  |                  |                       | Executioner      | Axe                | On narrow screens (≤ 640px), each row wraps.
 
 ## Level-up screen
 

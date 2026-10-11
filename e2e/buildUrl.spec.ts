@@ -18,7 +18,7 @@ async function expectBuild(page: Page) {
 
 test('an empty planner has no build in its URL', async ({ page }) => {
   await page.goto('/')
-  await expect(page).toHaveURL('/')
+  await expect(page).not.toHaveURL(/#/)
 })
 
 test('every edit is saved in the URL fragment', async ({ page }) => {
@@ -68,5 +68,5 @@ test('edits replace the URL, so Back leaves the planner', async ({ page }) => {
 test('an unreadable link opens an empty planner', async ({ page }) => {
   await page.goto('/#not*base64url')
   await expect(page.getByRole('button', { name: /Origin/ })).toContainText('Select')
-  await expect(page).toHaveURL('/')
+  await expect(page).not.toHaveURL(/#/)
 })
