@@ -83,4 +83,8 @@ Guidelines:
 
 Browsers are not installed by npm. Each machine needs `npx playwright install chromium` once before running the e2e tests.
 
+### On CI
+
+The GitHub Actions workflow (`.github/workflows/deploy.yml`) runs a `test` job on every push to `main`: lint, the unit and service tests, then the e2e tests in Chromium, installed with `npx playwright install --with-deps chromium`. The `deploy` job needs it, so a failing test or lint error blocks the deploy to GitHub Pages. On CI, Playwright always starts a fresh dev server, retries failed tests twice, and fails if a test is left as `test.only`. Type errors are caught by the build (`tsc -b`) in the `deploy` job.
+
 The runners never pick up each other's files. Vitest's `include` in `vite.config.ts` is limited to `test/`, and Playwright's `testDir` is `e2e/`. `tsconfig.app.json` type-checks `test/` together with `src/`.
