@@ -153,7 +153,7 @@ export function NestedSelect({ label, entries, value, onChange }: NestedSelectPr
   }
 
   return (
-    <div className="nested-select" ref={rootRef} onBlur={handleBlur}>
+    <div className="nested-select" ref={rootRef} onBlur={handleBlur} onMouseDown={(e) => e.preventDefault()}>
       <button
         type="button"
         className="nested-select__trigger"
@@ -161,7 +161,6 @@ export function NestedSelect({ label, entries, value, onChange }: NestedSelectPr
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
-        onMouseDown={(e) => e.preventDefault()}
         onClick={() => (isOpen ? closeMenu(false) : openMenu())}
         onKeyDown={handleTriggerKeyDown}
       >
@@ -189,7 +188,6 @@ export function NestedSelect({ label, entries, value, onChange }: NestedSelectPr
                     ref={(element) => {
                       itemRefs.current[index] = element
                     }}
-                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => select(item.id)}
                     onKeyDown={(event) => handleItemKeyDown(event, index)}
                     onMouseEnter={(event) => {
