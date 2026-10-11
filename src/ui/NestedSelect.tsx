@@ -161,6 +161,7 @@ export function NestedSelect({ label, entries, value, onChange }: NestedSelectPr
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => (isOpen ? closeMenu(false) : openMenu())}
         onKeyDown={handleTriggerKeyDown}
       >
@@ -187,7 +188,8 @@ export function NestedSelect({ label, entries, value, onChange }: NestedSelectPr
                     className={className}
                     ref={(element) => {
                       itemRefs.current[index] = element
-                    }}
+                    }
+                    onMouseDown={(e) => e.preventDefault()}}
                     onClick={() => select(item.id)}
                     onKeyDown={(event) => handleItemKeyDown(event, index)}
                     onMouseEnter={(event) => {
