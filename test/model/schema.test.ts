@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { choiceSlots, type Schema } from './schema'
+import { choiceSlots, emptyChoices, type Schema } from '../../src/model/schema'
+import type { KeystoneFeatureSlot } from '../../src/model/slotKinds'
+
+/** A keystone feature slot. Model and codec tests use made-up keys, so they don't depend on the game data. */
+function keystone(featureKey: string): KeystoneFeatureSlot {
+  return { kind: 'keystoneFeature', featureKey }
+}
 
 describe('choiceSlots', () => {
   it('lists the slots in level order, and in array order within a level', () => {
@@ -21,13 +27,19 @@ describe('choiceSlots', () => {
 
   it('leaves out keystone features', () => {
     const schema: Schema = {
-      1: ['runAndGunKeystoneFeature'],
-      4: ['firearmMasteryUltimateKeystoneFeature', 'firstArchetypeTalent'],
+      1: [keystone('runAndGun')],
+      4: [keystone('firearmMastery'), 'firstArchetypeTalent'],
     }
     expect(choiceSlots(schema)).toEqual([{ level: 4, kind: 'firstArchetypeTalent' }])
   })
 
   it('returns no slots for an empty schema', () => {
     expect(choiceSlots({})).toEqual([])
+  })
+})
+
+describe('emptyChoices', () => {
+  it('has one null per choice slot, leaving out keystone features', () => {
+    expect(emptyChoices({ 1: [keystone('runAndGun')], 2: ['skillIncrease', 'commonTalent'] })).toEqual([null, null])
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BitReader, BitWriter } from './bits'
+import { BitReader, BitWriter } from '../../src/codec/bits'
 
 describe('BitWriter', () => {
   it('starts empty', () => {

@@ -25,11 +25,22 @@ Top to bottom: the static choices, the starting characteristic increases, then t
 
 ### Static choices
 
-Four dropdowns, two per line: homeworld, origin, triumph and darkest hour. The labels in the mock-up are placeholders. There is no character dropdown, because the first version supports only the Rogue Trader ([Vision](./00-vision.md#first-version)).
+Four dropdowns, two per line: homeworld, origin, triumph and darkest hour. The labels in the mock-up are placeholders. There is no character dropdown, because the first version supports only the Rogue Trader ([Vision](./00-vision.md#first-version)). All four are built.
+
+Every dropdown always offers its whole table: triumphs and darkest hours don't depend on the origin ([decision 033](./decisions.md#033-triumphs-and-darkest-hours-dont-depend-on-the-origin)).
+
+Entries named `Group: Option`, such as `Forge World: Analytic System`, `Imperial World: STR` or `Sanctioned Psyker: Diviner`, are shown as **nested dropdowns**: the group appears once in the list with a `›` chevron, and hovering or clicking it opens its options beside it ([decision 031](./decisions.md#031-grouped-table-entries-show-as-nested-dropdowns)). The submenu opens to the right, or to the left when there is no room. On narrow screens (≤ 640px) it expands inline below the group instead. The closed dropdown shows the full entry name.
+
+Keyboard: ↑ / ↓ / Home / End move through a list, → / Enter / Space open a group, ← / Escape close it, Escape closes the dropdown and Tab leaves it.
 
 ### Starting characteristic increases
 
 One cell for each of the 9 characteristics (WS, BS, STR, TGH, AGI, INT, PER, WP, FEL). Each cell has two pips, one for each time that characteristic is taken among the 6 `startingCharacteristicIncreasesIds`. The rules (any characteristic, at most twice each) are in [Starting characteristic increases](./availability-rules.md#starting-characteristic-increases).
+
+- Clicking a cell cycles it: 0 → 1 → 2 → 0 increases. Once all 6 are used, clicking a cell taken once removes it, because it can't take a second ([decision 034](./decisions.md#034-starting-increase-cells-cycle-on-click)).
+- Filled pips and the cell border show the count. When all 6 are used, cells with no increase are disabled.
+- Taken increases are always stored first, in the order they were taken, with free slots last. Removing one moves the later ones up.
+- Nine cells in one row. On narrow screens (≤ 640px) they wrap into a 3 × 3 grid.
 
 ### Archetype rows
 
@@ -44,6 +55,12 @@ Three stacked rows, one per archetype tier:
 - The **selected** archetype in each row is highlighted (orange ring).
 - **Locked** archetypes are shown in red and cannot be picked, using the same convention as unselectable talents.
 - A second archetype or Exemplar loaded from a link is shown as selected even while its row is locked. The rules for what a build may hold versus what the user may change are in [Architecture §6: Validation vs. editing](./Architecture.md#validation-vs-editing).
+- A row is drawn red when none of its archetypes can be picked, such as the second row before a first archetype is selected.
+- Clicking an archetype selects it, and clicking the selected one clears it. The Exemplar toggles the same way.
+- Selecting an archetype starts its level progression empty, and switching archetype clears the old one's choices ([decision 038](./decisions.md#038-selecting-an-archetype-resets-its-choices)). If the new first archetype doesn't allow the selected second archetype, the validator clears that too. The Exemplar stays.
+- A switch that would undo earlier choices first asks to confirm, in a modal dialog with **Cancel** (focused, and also Escape) and **Proceed**. When it asks is in [Architecture §6: Confirming archetype switches](./Architecture.md#confirming-archetype-switches).
+- Until the level-up screen exists, selecting an archetype only sets it, and doesn't open anything.
+- Emblems show the archetype's initial until real icons are drawn. On narrow screens (≤ 640px), each row wraps.
 
 ## Level-up screen
 

@@ -1,0 +1,147 @@
+.archetype-rows {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
+.archetype-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px 40px;
+  min-height: 120px;
+  padding: 12px 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--row-bg);
+
+  @media (max-width: 640px) {
+    gap: 14px 12px;
+    padding-inline: 8px;
+  }
+}
+
+.archetype-row--compact {
+  column-gap: 18px;
+
+  @media (max-width: 640px) {
+    column-gap: 12px;
+  }
+}
+
+.archetype-row--locked {
+  border-color: var(--locked-line);
+  background: var(--locked-bg);
+}
+
+.archetype-row--exemplar {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+
+.archetype-row__wing {
+  flex: 0 1 130px;
+  min-width: 0;
+  height: 24px;
+  margin-bottom: 26px;
+  color: var(--line-strong);
+
+  .archetype-row--locked & {
+    color: var(--locked-line-strong);
+  }
+}
+
+.archetype-row__wing--mirrored {
+  transform: scaleX(-1);
+}
+
+.archetype {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 96px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--text-strong);
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Three per line on a 320px-wide phone. */
+  @media (max-width: 640px) {
+    width: 80px;
+  }
+}
+
+.archetype__emblem {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--emblem-line);
+  border-radius: 50%;
+  background: var(--emblem-bg);
+  color: var(--accent);
+  font-size: 24px;
+  font-weight: 700;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  .archetype:hover:not(:disabled) & {
+    border-color: var(--accent);
+  }
+
+  @media (max-width: 640px) {
+    width: 56px;
+    height: 56px;
+    font-size: 21px;
+  }
+}
+
+.archetype__name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.archetype--locked {
+  .archetype__emblem {
+    border-color: var(--locked-line-strong);
+    background: var(--locked-emblem-bg);
+    color: var(--locked-text);
+  }
+
+  .archetype__name {
+    color: var(--locked-text);
+  }
+}
+
+/* Selected wins over locked: a locked archetype loaded from a link still shows as selected. */
+.archetype--selected {
+  .archetype__emblem {
+    border-color: var(--accent);
+    box-shadow:
+      0 0 0 3px var(--emblem-bg),
+      0 0 0 4px var(--accent),
+      0 0 14px 2px var(--accent-glow);
+    color: var(--accent);
+  }
+
+  .archetype__name {
+    color: var(--accent);
+  }
+}

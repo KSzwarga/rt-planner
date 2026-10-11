@@ -238,3 +238,140 @@ A chronological log of decisions made during development that affect the archite
 - **Context:** The origins table already has 11 entries, close to the 15 that 4 bits allow.
 - **Decision:** `originId` is encoded in 5 bits, so the table can hold up to 31 origins. As in decision 026, the format version stays at 1, because the app has not been released.
 - **Consequences:** Every link is one more bit longer, and every field after `originId` moves by one bit. An empty build still encodes to `E`.
+
+## 028. Unit and service tests live in `test/`
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Unit and service tests sat next to the code they test in `src/`, mixing test files into the app source tree.
+- **Decision:** Vitest tests live in a top-level `test/` folder that mirrors `src/`, such as `src/codec/bits.ts` → `test/codec/bits.test.ts`. Vitest's `include` is `test/**/*.test.{ts,tsx}`, and `tsconfig.app.json` includes `test/` so the tests are still type-checked. E2E tests stay in `e2e/`.
+- **Consequences:** `src/` holds only app code. Tests import the code under test through `../../src/...` paths, and moving a module means moving its test to the matching path under `test/`.
+
+## 029. Imperial World is one homeworld entry per characteristic
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** The Imperial World homeworld gives +10 to one characteristic of the player's choice, any except WS and BS. A `BackgroundEntry` has fixed `characteristicModifiers`, and `BuildPlan` has no field for this choice.
+- **Decision:** The homeworlds table has one entry per choice, named `Imperial World: <abbreviation>` (STR, TGH, AGI, INT, PER, WP, FEL), each with a +10 modifier to that characteristic. All of them grant the same `imperialWorld` talent list. They take IDs 5–11, and Voidborn moves to ID 12. As in decision 026, the format version stays at 1, because the app has not been released.
+- **Consequences:** The choice is encoded in `homeworldId`, so the `BuildPlan` shape, codec and validator don't change. The table has 12 entries, which still fits the 4-bit field (up to 15). The homeworld dropdown shows 7 Imperial World options instead of 1.
+
+## 030. Forge World is one homeworld entry per augmentation
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** The Forge World homeworld makes the player choose one of three augmentations: Subskin Armor, Locomotion System or Analytic System. As with Imperial World (decision 029), `BuildPlan` has no field for this choice.
+- **Decision:** Following decision 029, the homeworlds table has one entry per option, named `Forge World: <option>`. The three entries are identical apart from the name, with the same characteristic modifiers and the same `forgeWorld` talent list. Forge World takes IDs 2–4, so the later homeworlds move: Fortress World 5, Hive World 6, Imperial World 7–13, Voidborn 14. This replaces the IDs given in decision 029. The format version stays at 1, because the app has not been released.
+- **Consequences:** The table has 14 entries, so the 4-bit `homeworldId` field (up to 15) has room for one more. Another homeworld choice or new homeworld will likely need a 5-bit field, as decisions 026 and 027 did for characters and origins.
+
+## 031. Grouped table entries show as nested dropdowns
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Decisions 029 and 030 split homeworlds with a choice into one entry per option, and the origins table already does the same for Sanctioned Psyker and Arbitrator. Listed flat, these options crowd the dropdowns (7 Imperial World entries in a row).
+- **Decision:** A table entry named `Group: Option` belongs to the group before the `: `. The dropdown shows each group once, at the position of its first entry, and its options in a nested menu labelled by the part after `: `. The grouping is derived from the names by `toMenuItems` in `src/ui/menuItems.ts`, and the tables get no extra field. The dropdown is a custom ARIA menu (`NestedSelect`), because a native `<select>` can't nest.
+- **Consequences:** Any table can use nested options by following the naming convention, with no data or code changes. The separator `: ` must not appear in a name that isn't meant to be grouped. The grouping is presentation only, so the URL format and `BuildPlan` don't change.
+
+## 032. The origin decides the available triumphs and darkest hours
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Which triumphs and darkest hours a character can take depends on their origin. Decision 023 gave triumphs and darkest hours only an `id` and a `name`, and no rule said where this dependency lives. No validator existed yet to enforce it.
+- **Decision:** Each origin entry lists `availableTriumphIds` and `availableDarkestHourIds`, so the rule lives on the origin, as allowed second archetypes live on the first archetype (decision 023). Following decision 008, one availability function per field (`src/availability/originChoices.ts`) is shared by the UI and the validator. Without an origin, nothing is available: unlike the second archetype (decision 007), a triumph or darkest hour without an origin is nulled. The first version of the validator (`src/validation/validator.ts`) checks the static choices: unknown homeworld, origin, triumph and darkest hour IDs, and these origin lists. The archetype pick screen runs it on every edit.
+- **Consequences:** Triumphs and darkest hours don't need to know about origins. A link with a triumph but no origin loses the triumph. Changing the origin nulls any triumph or darkest hour it doesn't list. The lists are availability data, so changing them needs no format version bump (Architecture §4.1). Until the real lists are known, every origin lists triumph 1 and darkest hour 1, the only entries in those tables.
+
+## 033. Triumphs and darkest hours don't depend on the origin
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Decision 032 assumed each origin allows its own triumphs and darkest hours. The game data shows every origin offers the same three triumphs (Apex of Brilliance, Illustrious Glory, Feat of Greatness) and the same three darkest hours (Grim Portents, Brand of Shame, Shadow of Torment).
+- **Decision:** Supersedes 032. Origins no longer list `availableTriumphIds` or `availableDarkestHourIds`, and the `originChoices` availability functions are removed. Every triumph and darkest hour is always available, with or without an origin. The triumph and darkest hour tables hold these three entries each, with IDs 1–3 in that order. The validator from 032 stays, checking only that homeworld, origin, triumph and darkest hour IDs exist in their tables.
+- **Consequences:** The triumph and darkest hour dropdowns are always enabled and show their whole table. Changing the origin never clears them. The triumph and darkest hour IDs are part of the URL format, so their order is now fixed.
+
+## 034. Starting increase cells cycle on click
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** UI Design gives each characteristic a cell with two pips for the 6 starting increases, but didn't say how the user adds or removes them. The pips alone are too small to tap reliably on a phone.
+- **Decision:** The whole cell is one button that cycles its characteristic 0 → 1 → 2 → 0 increases. When it can't take another (all 6 slots used), a click removes all of its increases. Cells with no increase are disabled while all 6 are used. The UI stores taken increases first, in the order taken, with free slots last. The rule itself, at most 2 per characteristic, is the availability function `availableStartingIncreaseIds`, shared with the validator (decision 008).
+- **Consequences:** One control per characteristic works the same with a mouse, a keyboard or touch. Lowering a count from 2 to 1 takes two clicks (to 0, then to 1). Free slots at the end are trimmed from the URL by the encoder, so builds with fewer than 6 increases get shorter links. The validator doesn't reorder slots, so a link with gaps keeps them until the user edits the increases.
+
+## 035. Upgrade slot kinds are listed by name
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Upgrade slot kinds were matched by a pattern (any kind ending in `Upgrade`) and given their 3 bits by a separate branch, apart from the table that held every other kind's bit width. A misspelt upgrade kind in a schema still type-checked and encoded.
+- **Decision:** Each ultimate's upgrade slot kind is named in `UpgradeSlotKind` (`firearmMasteryUpgrade`, `cullTheWeakUpgrade`), and its bit width sits in the one bit-width table, `CHOICE_SLOT_KIND_BITS` (renamed from `FIXED_SLOT_KIND_BITS`, as every choice kind now has a fixed name). Adding an ultimate means adding its kind to both.
+- **Consequences:** Every choice slot kind and its width are in one place, and a schema with an unknown or misspelt choice kind fails to type-check. Adding an ultimate takes one more line than before. The widths and the URL format don't change.
+
+## 036. One `keystoneFeature` slot kind and a keystone feature table
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Each keystone feature was its own slot kind, named by a pattern (`runAndGunKeystoneFeature`, `firearmMasteryUltimateKeystoneFeature`). The slot kind and the feature it showed were mixed up in one string, and the "shared keystone-feature table" in Architecture §4.3 didn't exist.
+- **Decision:** There is one slot kind, `keystoneFeature`. A schema slot for it is an object, `{ kind: 'keystoneFeature', featureKey }`, built in data with `keystoneFeature('runAndGun')`. Choice slots stay plain kind strings. `KEYSTONE_FEATURES` in `src/gamedata/keystoneFeatures.ts` holds every keystone feature by key, with its name and `isUltimate`. Keystone features are never encoded, so they use string keys, as talent lists do (decision 011), not numeric IDs.
+- **Consequences:** Adding a keystone feature means adding one table entry, with no new slot kind. A misspelt key fails to type-check, and a data test checks that every schema's keystone features exist. The level-up screen can read a feature's name from the table. The table can change freely, with no format version bump, and the encoding doesn't change.
+
+## 037. The build lives in the URL fragment, replaced on every edit
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Decision 001 keeps the build in the URL, but didn't say which part of it, or how edits affect the browser history. The codec and the validator for the static choices were ready to connect to the page.
+- **Decision:** The encoded build is the URL fragment (`#…`). Each edit validates the build and replaces the URL with `history.replaceState`, so edits add no history entries. The app reads the fragment on load and on `hashchange`, validates it, and rewrites it if anything was nulled. An empty build has no fragment. An unreadable fragment opens an empty planner and logs a warning. The URL is written only by an edit or by reading a link, never as a side effect of rendering. Until the Exemplar schema exists, the codec gets an empty one. Links are not stable before the first release: table IDs can still change, so an early link may open as a different build.
+- **Consequences:** Fragments are never sent to the server, so any static host works, and pasting a link into an open tab loads it without a reload. Back leaves the planner instead of undoing edits, so there is no undo history yet. The validator doesn't check archetypes yet, so a hand-edited link can still carry archetype choices that aren't checked. They aren't shown anywhere yet.
+
+## 038. Selecting an archetype resets its choices
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** The archetype rows let the user pick archetypes before the level-up screen exists. A `*ChoicesIds` array must have one entry per choice slot of its archetype's schema (§3), or the encoder throws, so changing the archetype has to change the array too.
+- **Decision:** Selecting a first or second archetype, or taking the Exemplar, sets its choices to one null per choice slot (`emptyChoices`). Switching to another archetype in the same row discards the old one's choices, and clicking the selected archetype clears it with them. Re-selecting the selected archetype keeps its choices. The validator now also checks the archetypes themselves, following decision 007. Unknown first and second archetypes are nulled, and so is a second archetype that a non-null first doesn't allow. A nulled archetype loses its choices, and the Exemplar is never nulled. Selecting an archetype doesn't open the level-up screen yet.
+- **Consequences:** A build always has choices arrays that match its schemas, so it can always be encoded. Switching archetype loses that archetype's progression, so the level-up screen should warn about this once it exists. The choices inside an archetype are still not validated.
+
+## 039. The seven second archetypes, and which first archetypes allow them
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Only Executioner existed as a second archetype, and its schema was a placeholder that didn't match the game. Its ultimate was at level 20, with upgrades at 24, 30 and 35. The first archetypes' allowed second archetypes were mostly empty.
+- **Decision:** The second archetype table holds Assassin, Vanguard, Bounty Hunter, Master Tactician, Grand Strategist, Arch-Militant and Executioner, with IDs 1–7 in that order. Executioner moves from ID 1 to 7, which is allowed because links aren't stable yet (decision 037). The schemas follow the Rogue Trader fandom wiki: the keystone at 16, the ultimate at 19, and upgrades at 27 and 35. Level 20's additional AP is a fixed benefit, so it is the keystone feature `additionalActionPoint`. Where an archetype's Heroic Act and Desperate Measures ultimates have different names, its keystone feature names both, and the upgrade slot kind takes the Heroic Act name, such as `steadySuperiorityUpgrade`. Which first archetypes allow each second archetype follows the list from the project owner, which includes the Bladedancer and Executioner pairings the wiki pages lack. First archetypes reference second archetypes through the `SECOND_ARCHETYPE` ID constants, as data references characteristics through `CHARACTERISTIC` (decision 024). The placeholder Executioner's keystone features (Killing Edge, Cull the Weak) and `cullTheWeakUpgrade` are removed.
+- **Consequences:** Every first archetype now has 3–4 second archetypes to choose from. Soldier no longer allows Executioner. The second archetype row shows 7 archetypes, so it uses tighter spacing (as in the mock-up) to fit on one line on desktop.
+
+## 040. Confirm archetype switches that would undo choices
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Switching archetype discards the old archetype's choices (decision 038), and a new first archetype can make the validator null the second. One click could silently lose a progression.
+- **Decision:** Before applying an archetype change, the UI asks "Switching archetype might undo some of your previous choices, do you want to proceed?" when the change would: switch or clear a first archetype that has non-null choices, switch or clear a second archetype that has non-null choices, or switch the first archetype to one that doesn't allow the selected second. `undoesEarlierChoices` decides this before the change, using the shared availability function, so it matches what the validator would do. The dialog is the native `<dialog>` element opened with `showModal()`. Cancel has focus first, and Escape cancels.
+- **Consequences:** Nothing is lost without confirmation, and switches that lose nothing don't interrupt. Clearing the first archetype doesn't ask unless it has choices, because the second archetype is kept (decision 007). Toggling the Exemplar off discards its choices without asking. The Exemplar has no schema yet, so it has no choices to lose, but this should be revisited once it does.
+
+## 041. Talent table and lists from the wiki, and talents take 10 bits
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Talent slots and the talent lists that origins, homeworlds and archetypes grant had no data behind them. The wiki's talents table lists each talent's name, effect and source.
+- **Decision:** `talents.ts` and `talentLists.ts` in `src/gamedata` are generated from the [wiki's talents table](https://roguetrader.wiki.fextralife.com/Talents). Each talent is stored once, with `id`, `name` and `description`. IDs follow alphabetical order, and new talents are appended. A talent's source decides its list: All Archetypes goes to `common`, Psyker and Sanctioned Psyker to their own lists, each psyker discipline to its own list, and each archetype, origin or homeworld to its existing list. Sources outside the planner's scope are left out: Overseer, colony traits and projects, convictions, companion-only talents, Navigator, Unsanctioned Psyker and one-off events. When the wiki repeats a talent with different text, the most complete description is kept. That leaves 546 talents, more than 9 bits can hold, so `*Talent` slots take 10 bits (up to 1023). The format version stays at 1, because links aren't stable yet (decision 037).
+- **Consequences:** Every list a homeworld, origin or archetype grants now exists, and data tests check this, along with every talent being in a list. Every link with talent choices is one bit longer per talent slot. Requirements, granted lists and characteristic modifiers on talents are still missing, so every talent in a slot's pool is selectable for now. Some wiki descriptions have gaps where the wiki itself is incomplete, such as "gains +1 and +10 damage".
+
+## 042. Increase availability per archetype tier, and talent requirements
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Decision 010 stores which archetypes can improve a characteristic or skill as `availableForArchetypes` on its entry. But first and second archetypes are separate tables with overlapping IDs (1 is Soldier in one and Assassin in the other), so one list of IDs is ambiguous. Talent requirements had a type in Availability Rules but no data, and the talent table is generated from the wiki.
+- **Decision:** Increase entries have `availableForFirstArchetypes` and `availableForSecondArchetypes` in place of `availableForArchetypes`. This refines decision 010 without superseding it: the conditions still live on the increase entry. The Exemplar can improve every characteristic and skill, as the wiki states, so that is part of the availability rule, not data. The data comes from each archetype's page on the Rogue Trader fandom wiki. A data test restates the wiki's lists per archetype to check them. A skills table (`SKILLS`, `SKILL` constants) holds the 13 skills in the order decision 017 fixed. First archetypes get `FIRST_ARCHETYPE` ID constants, like `SECOND_ARCHETYPE`. Talent requirements live in a hand-written file, `talentRequirements.ts`, keyed by talent ID and written by talent name, apart from the generated talent table. Names resolve when the module loads and throw if unknown. The first requirements: Heavy Armour Proficiency needs STR 45, and each Advanced Skill talent needs its Base Skill talent.
+- **Consequences:** Availability can be checked per slot owner without ambiguity. The talent table can be regenerated without losing requirements. Origins, homeworlds and talents that unlock characteristics or skills still have no data, so no archetype offers Lore (Warp) yet. Nothing uses requirements or increase availability yet: the talent and increase availability functions come with the level-up screen.
+
+## 043. The validator replays every archetype choice, and origins unlock increases
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** The validator checked the static choices and the archetypes, but not the choices inside them. So a change that made a later choice illegal, such as switching to an origin that doesn't unlock a chosen skill, left that choice in place. Origins' "on advancement" characteristics and skills had no data.
+- **Decision:** The validator now runs the chronological replay of Architecture §6. `initialState` builds the character state from the static choices: characteristics at 30, plus homeworld and origin modifiers and the starting increases, and the origin's and homeworld's talent lists. `replayChoices` then walks every archetype choice in level order, checks it with its slot kind's availability function, and either applies it or nulls and logs it. That covers increases (source and the 2 / 4 / 6 cap), talents (pool, requirements, no repeats) and upgrades (1–4, each once). Abilities have no table yet, so only no-repeats is checked. The availability functions live in `src/availability`, ready for the level-up screen. Increase entries gain `availableForOrigins`, from the wiki's per-origin "On advancement this Origin makes available" lines, and `availableForHomeworlds`, which is empty for now. `ORIGIN` ID constants live in `originIds.ts`, apart from `origins.ts`, to avoid an import cycle. The Exemplar's empty schema and its talent list moved to `src/gamedata/exemplar.ts`.
+- **Consequences:** Every edit and every link is fully checked. Cascades, such as removing a Base Skill talent nulling its Advanced Skill, happen in one pass. Changing the origin or homeworld can now null archetype choices, but unlike archetype switches (decision 040), it doesn't ask for confirmation. Talents don't yet grant lists or characteristic modifiers, so the replay doesn't apply them.
+
+## 044. Ability table and lists from the wiki, and talents that were abilities
+
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** Ability slots had no table, so the validator could only check that an ability wasn't taken twice (decision 043). The wiki's talents table also lists some abilities as talents.
+- **Decision:** `abilities.ts` and `abilityLists.ts` in `src/gamedata` are generated from the wiki's abilities table, the same way as talents (decision 041): IDs in alphabetical order, and one list per archetype, per origin that has abilities, and per psyker discipline, keyed like the talent lists. There is no common list. Left out: keystone abilities, matched by name against the fandom pages' Keystone lists and `KEYSTONE_FEATURES`, Heroic Act and Desperate Measures ultimates, and sources outside scope (Overseer, Navigator, Tech-Priest). Origins grant their ability list through `grantsAbilityLists`. Six talents that are the same ability under the same name and effect were removed from the talent table: Assault Onslaught, Forced Repentance, In the Name of the Lex Imperialis!, That's an Order!, War Hymn and Where It Hurts. Three talents that share a name with an ability but have a different effect and source were kept: Defensive Stance, Perfect Timing and Strongpoint. Ability slots offer the owning archetype's list plus the build's lists. Exemplar ability slots offer both archetypes' lists. The validator checks the pool and no-repeats.
+- **Consequences:** Ability choices are fully validated, and switching origin nulls abilities that only the old origin offered. The talent table shrinks from 546 to 540, so talent IDs after the removed ones move. Links aren't stable yet (decision 037), so this is allowed. A data test fails if a talent shares a name with an ability beyond the three known cases.
+

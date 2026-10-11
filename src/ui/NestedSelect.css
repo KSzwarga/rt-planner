@@ -1,0 +1,171 @@
+.nested-select {
+  position: relative;
+  min-width: 0;
+}
+
+.nested-select__trigger {
+  display: grid;
+  grid-template-columns: var(--field-label-width) minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  height: var(--field-height);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  color: var(--text-strong);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: var(--line-strong);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.nested-select__label {
+  font-family: var(--mono);
+  font-size: var(--field-label-size);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.nested-select__value {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nested-select__value--empty {
+  color: var(--text-muted);
+}
+
+.nested-select__chevron {
+  width: 12px;
+  height: 12px;
+  margin-left: 10px;
+  color: var(--text);
+  transition: transform 0.15s;
+
+  [aria-expanded='true'] > & {
+    transform: rotate(180deg);
+  }
+}
+
+.nested-select__menu,
+.nested-select__submenu {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  box-shadow: var(--shadow);
+}
+
+.nested-select__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.nested-select__group {
+  position: relative;
+}
+
+.nested-select__submenu {
+  position: absolute;
+  top: -5px;
+  left: calc(100% + 2px);
+  min-width: 200px;
+}
+
+.nested-select__submenu--flipped {
+  left: auto;
+  right: calc(100% + 2px);
+}
+
+.nested-select__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--menu-item-padding-block) 12px;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: none;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+  }
+
+  /* Pointer hover or keyboard focus. Focus moved into a submenu by a tap or click isn't highlighted. */
+  &:hover,
+  &:focus-visible {
+    background: var(--highlight);
+  }
+
+  &:focus-visible {
+    border-left-color: var(--line-strong);
+  }
+}
+
+.nested-select__item--open {
+  background: var(--highlight);
+}
+
+.nested-select__item--current {
+  color: var(--accent);
+}
+
+.nested-select__group-chevron {
+  width: 12px;
+  height: 12px;
+  margin-left: 16px;
+  color: var(--text);
+  transform: rotate(-90deg);
+}
+
+/* Narrow screens have no room beside the menu, so a group's options open inline below it. */
+@media (max-width: 640px) {
+  .nested-select__submenu,
+  .nested-select__submenu--flipped {
+    position: static;
+    min-width: 0;
+    padding: 0 0 4px;
+    border: 0;
+    box-shadow: none;
+    background: none;
+
+    .nested-select__item {
+      padding-left: 28px;
+    }
+  }
+
+  .nested-select__group-chevron {
+    transform: none;
+
+    .nested-select__item--open > & {
+      transform: rotate(180deg);
+    }
+  }
+}

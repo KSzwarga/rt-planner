@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { base64urlToBits, bitsToBase64url } from './base64url'
-import { DecodeError } from './errors'
+import { base64urlToBits, bitsToBase64url } from '../../src/codec/base64url'
+import { DecodeError } from '../../src/codec/errors'
 
 describe('bitsToBase64url', () => {
   it('writes an empty stream as an empty string', () => {

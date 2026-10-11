@@ -1,17 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest'
-import { type BuildPlan, emptyBuildPlan } from '../model/buildPlan'
-import type { Schema } from '../model/schema'
-import { bitsToBase64url } from './base64url'
-import { BitWriter } from './bits'
-import { type ArchetypeSchemas, decodeBuild, encodeBuild } from './codec'
-import { DecodeError } from './errors'
+import { type BuildPlan, emptyBuildPlan } from '../../src/model/buildPlan'
+import type { Schema } from '../../src/model/schema'
+import type { KeystoneFeatureSlot } from '../../src/model/slotKinds'
+import { bitsToBase64url } from '../../src/codec/base64url'
+import { BitWriter } from '../../src/codec/bits'
+import { type ArchetypeSchemas, decodeBuild, encodeBuild } from '../../src/codec/codec'
+import { DecodeError } from '../../src/codec/errors'
+
+/** A keystone feature slot. Model and codec tests use made-up keys, so they don't depend on the game data. */
+function keystone(featureKey: string): KeystoneFeatureSlot {
+  return { kind: 'keystoneFeature', featureKey }
+}
 
 /** The first-archetype example from Architecture §4.3: 22 choice slots. */
 const EXAMPLE_FIRST_SCHEMA: Schema = {
-  1: ['runAndGunKeystoneFeature'],
+  1: [keystone('runAndGun')],
   2: ['skillIncrease'],
-  3: ['revelInSlaughterKeystoneFeature'],
-  4: ['firearmMasteryUltimateKeystoneFeature', 'firstArchetypeTalent'],
+  3: [keystone('revelInSlaughter')],
+  4: [keystone('firearmMastery'), 'firstArchetypeTalent'],
   5: ['characteristicIncrease', 'firstArchetypeTalent'],
   6: ['characteristicIncrease', 'firstArchetypeAbility'],
   7: ['characteristicIncrease', 'commonTalent'],
@@ -26,14 +32,14 @@ const EXAMPLE_FIRST_SCHEMA: Schema = {
 }
 
 const SMALL_FIRST_SCHEMA: Schema = {
-  1: ['runAndGunKeystoneFeature'],
+  1: [keystone('runAndGun')],
   2: ['commonTalent', 'skillIncrease'],
 }
 
 const SECOND_SCHEMA: Schema = {
   16: ['secondArchetypeTalent'],
   17: ['characteristicIncrease', 'skillIncrease'],
-  18: ['masterTacticianKeystoneFeature'],
+  18: [keystone('masterTactician')],
 }
 
 const EXEMPLAR_SCHEMA: Schema = {
@@ -81,9 +87,9 @@ const FULL_BUILD = build({
   darkestHourId: 15,
   startingCharacteristicIncreasesIds: [9, 9, 8, 8, 7, 7],
   firstArchetypeId: 1,
-  firstArchetypeChoicesIds: [13, 511, 9, 510, 8, 255, 7, 509, 508, 12, 4, 507, 6, 254, 11, 5, 506, 505, 504, 503, 10, 3],
+  firstArchetypeChoicesIds: [13, 1023, 9, 1022, 8, 255, 7, 1021, 1020, 12, 4, 1019, 6, 254, 11, 5, 1018, 1017, 1016, 1015, 10, 3],
   secondArchetypeId: 1,
-  secondArchetypeChoicesIds: [511, 9, 13],
+  secondArchetypeChoicesIds: [1023, 9, 13],
   isExemplar: true,
   exemplarArchetypeChoicesIds: [255, 4],
 })
@@ -107,9 +113,9 @@ describe('codec', () => {
       { name: 'only a character', link: 'EI', plan: build({ characterId: 1 }) },
       {
         // 0001 00001 0010 00011 0000 0101 | 0001 0001 0010 0000 1001 0000 |
-        // 0011 100101100 1101 | 0000 | 1 11111111 100
+        // 0011 0100101100 1101 | 0000 | 1 11111111 100
         name: 'a build with every section',
-        link: 'EJDBREgkDlmh_4',
+        link: 'EJDBREgkDSzQ_8',
         plan: build({
           characterId: 1,
           homeworldId: 2,
@@ -191,14 +197,14 @@ describe('codec', () => {
   describe('unknown archetype IDs', () => {
     it('stops at an unknown first archetype and leaves everything after it empty', () => {
       // Static fields, first archetype 14, then bits that would otherwise be read as choices.
-      const link = rawLink([...EMPTY_STATIC_FIELDS, [14, 4], [0b111111111, 9], [1, 4], [1, 1]])
+      const link = rawLink([...EMPTY_STATIC_FIELDS, [14, 4], [0b1111111111, 10], [1, 4], [1, 1]])
       expect(decodeBuild(link, SCHEMAS)).toEqual(emptyBuildPlan())
       expect(warn).toHaveBeenCalledOnce()
       expect(warn.mock.calls[0][0]).toContain('first archetype ID 14')
     })
 
     it('stops at an unknown second archetype and keeps the first', () => {
-      const link = rawLink([...EMPTY_STATIC_FIELDS, [3, 4], [7, 9], [2, 4], [9, 4], [1, 1]])
+      const link = rawLink([...EMPTY_STATIC_FIELDS, [3, 4], [7, 10], [2, 4], [9, 4], [1, 1]])
       expect(decodeBuild(link, SCHEMAS)).toEqual(
         build({ firstArchetypeId: 3, firstArchetypeChoicesIds: [7, 2] }),
       )
@@ -224,7 +230,7 @@ describe('codec', () => {
     it.each([
       { name: 'an ID too large for its field', plan: build({ homeworldId: 16 }) },
       { name: 'ID 0', plan: build({ originId: 0 }) },
-      { name: 'a talent ID over 511', plan: build({ firstArchetypeId: 3, firstArchetypeChoicesIds: [512, null] }) },
+      { name: 'a talent ID over 1023', plan: build({ firstArchetypeId: 3, firstArchetypeChoicesIds: [1024, null] }) },
       { name: '5 starting increases', plan: build({ startingCharacteristicIncreasesIds: Array(5).fill(null) }) },
       { name: 'an unknown first archetype', plan: build({ firstArchetypeId: 14 }) },
       { name: 'too few choices for the schema', plan: build({ firstArchetypeId: 3, firstArchetypeChoicesIds: [null] }) },

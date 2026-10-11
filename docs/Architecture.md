@@ -21,14 +21,14 @@ The build output is a static bundle that can be hosted on any static file host.
 
 ### Source layout
 
-Keep this tree up to date when adding, moving or removing modules. Tests sit next to the code they test ([Testing](./test.md)).
+Keep this tree up to date when adding, moving or removing modules. Unit and service tests live in `test/`, mirroring this tree ([Testing](./test.md)).
 
 ```
 src/
 ├── model/                    Shared types used by the codec, validator and UI
 │   ├── buildPlan.ts          Id, Choice, BuildPlan (§3), emptyBuildPlan
-│   ├── schema.ts             Schema (§4.3), choiceSlots: the encoded slots in order
-│   └── slotKinds.ts          Slot kinds and their bit widths (§4.3)
+│   ├── schema.ts             Schema (§4.3), choiceSlots: the encoded slots in order, emptyChoices
+│   └── slotKinds.ts          Slot kinds, schema slots and choice bit widths (§4.3)
 ├── codec/                    BuildPlan ⇄ URL string (§2, §4, §5)
 │   ├── codec.ts              encodeBuild, decodeBuild, ArchetypeSchemas
 │   ├── layout.ts             Format version and fixed field widths (§4.1, §4.2)
@@ -37,14 +37,48 @@ src/
 │   └── errors.ts             DecodeError
 ├── gamedata/                 Game data tables. IDs are part of the URL format (§4.2)
 │   ├── types.ts              Entry types for every table
-│   ├── characteristics.ts    Characteristics (WS = 1 … FEL = 9), CHARACTERISTIC ID constants
+│   ├── characteristics.ts    Characteristics (WS = 1 … FEL = 9), CHARACTERISTIC ID constants, what unlocks each
+│   ├── originIds.ts          ORIGIN ID constants (apart from origins.ts, to avoid an import cycle)
+│   ├── exemplar.ts           The Exemplar's schema (empty for now) and talent list
 │   ├── homeworlds.ts         Homeworlds: modifiers, granted talent and ability lists
 │   ├── origins.ts            Origins: same shape as homeworlds
+│   ├── keystoneFeatures.ts   Keystone features by key, and keystoneFeature() for schema slots
+│   ├── talents.ts            Talents: id, name, description (generated from the wiki)
+│   ├── talentLists.ts        Talent lists: key, name, talent IDs (generated from the wiki)
+│   ├── talentRequirements.ts Talent requirements by talent ID (hand-written, by talent name)
+│   ├── abilities.ts          Abilities: id, name, description (generated from the wiki)
+│   ├── abilityLists.ts       Ability lists: key, name, ability IDs (generated from the wiki)
+│   ├── skills.ts             Skills (Athletics = 1 … Tech-Use = 13), SKILL ID constants, archetypes that improve each
 │   ├── triumphs.ts           Triumphs: id and name
 │   ├── darkestHours.ts       Darkest hours: id and name
-│   ├── firstArchetypes.ts    First archetypes: schema (levels 1–15), lists, allowed second archetypes
-│   └── secondArchetypes.ts   Second archetypes: schema (levels 16–35), lists
+│   ├── firstArchetypes.ts    First archetypes: schema (levels 1–15), lists, allowed second archetypes, FIRST_ARCHETYPE ID constants
+│   └── secondArchetypes.ts   Second archetypes: schema (levels 16–35), lists, SECOND_ARCHETYPE ID constants
+├── availability/             Availability functions, shared by the UI and the validator (Availability Rules)
+│   ├── characterState.ts     CharacterState, SlotRef, the characteristic base value and increase amount
+│   ├── archetypes.ts         availableSecondArchetypeIds: the second archetypes a first allows
+│   ├── startingIncreases.ts  availableStartingIncreaseIds: at most 2 starting increases per characteristic
+│   ├── increases.ts          characteristicIncrease / skillIncrease: source and the 2 / 4 / 6 cap
+│   ├── talents.ts            Talent slots: pool lists, talentOptions, requirements, no repeats
+│   ├── abilities.ts          Ability slots: pool lists, abilityOptions, no repeats
+│   └── upgrades.ts           Ultimate upgrade slots: IDs 1–4, each once
+├── validation/               The validator (§6)
+│   ├── validator.ts          validateBuild, ValidatorTables, GAME_TABLES
+│   ├── replay.ts             The chronological replay: initial state, then every archetype choice in order
+│   └── nulling.ts            validateId: null and log an illegal ID
+├── url/                      The build in the URL fragment (§2)
+│   └── buildUrl.ts           buildFromHash, hashFromBuild, ARCHETYPE_SCHEMAS
+├── ui/                       React screens and components (UI Design)
+│   ├── ArchetypePickScreen.tsx  Archetype pick screen: static choices, starting increases, archetypes
+│   ├── ArchetypeRows.tsx     The first, second and Exemplar rows
+│   ├── archetypeEdits.ts     selectFirstArchetype, selectSecondArchetype, setExemplar, undoesEarlierChoices
+│   ├── ConfirmDialog.tsx     Modal yes / no question on the native <dialog>
+│   ├── NestedSelect.tsx      Dropdown over a table, with `Group: Option` entries as nested menus
+│   ├── menuItems.ts          toMenuItems: groups table entries by name for NestedSelect
+│   ├── StartingIncreases.tsx One cell with two pips per characteristic
+│   ├── startingIncreaseEdits.ts  cycleStartingIncrease: what clicking a cell does
+│   └── useBuildInUrl.ts      The build as React state, synced with the URL fragment
 ├── App.tsx, main.tsx         React entry point
+test/                         Vitest unit and service tests, mirroring src/
 e2e/                          Playwright end-to-end tests
 ```
 
@@ -77,6 +111,16 @@ The first field written takes the most significant bits, so the stream reads lef
 The codec doesn't own any game data. `encodeBuild` and `decodeBuild` take the archetype schemas as an `ArchetypeSchemas` argument: the first- and second-archetype schemas by ID, and the Exemplar schema.
 
 The encoder expects a well-formed build, such as the validator's output, and throws on anything else. That includes an ID too wide for its field, an unknown archetype, or a choices array whose length doesn't match its schema. The decoder throws `DecodeError` only when the link can't be read at all: a character outside base64url, or an unsupported version (§4.1). Anything it can read, it returns unvalidated.
+
+### Where the build lives in the URL
+
+The encoded build is the URL's **fragment**: `https://…/#EAG`. A fragment is never sent to the server, so the app works on any static host, and changing it doesn't reload the page.
+
+- `src/url/buildUrl.ts` connects the codec to the URL. `buildFromHash` decodes and then validates. An empty or unreadable fragment gives an empty build, and an unreadable one logs a warning. `hashFromBuild` encodes. An empty build has no fragment, so the plain address is an empty planner.
+- `useBuildInUrl` (`src/ui/useBuildInUrl.ts`) holds the build for the UI. It reads the fragment on load and on `hashchange`, so a link pasted into an open page loads too. If validation nulled anything, it rewrites the fragment without it. Every edit goes `apply change → validate → store state → encode to URL`.
+- The URL is **replaced, not pushed**, so edits add no history entries and Back leaves the planner.
+- The URL is only written by an edit or by reading a link, never as a side effect of rendering. Otherwise a link opened while the page starts up could be overwritten by the build from before it.
+- Until the Exemplar schema is defined, the app passes an empty one, so an Exemplar has no choices to encode.
 
 ## 3. The persisted object: `BuildPlan`
 
@@ -159,10 +203,10 @@ An archetype schema is a level-to-slots progression table. This example is a fir
 
 ```ts
 const progression = {
-  1: ["runAndGunKeystoneFeature"],
+  1: [keystoneFeature("runAndGun")],
   2: ["skillIncrease"],
-  3: ["revelInSlaughterKeystoneFeature"],
-  4: ["firearmMasteryUltimateKeystoneFeature", "firstArchetypeTalent"],
+  3: [keystoneFeature("revelInSlaughter")],
+  4: [keystoneFeature("firearmMastery"), "firstArchetypeTalent"],
   5: ["characteristicIncrease", "firstArchetypeTalent"],
   6: ["characteristicIncrease", "firstArchetypeAbility"],
   7: ["characteristicIncrease", "commonTalent"],
@@ -181,8 +225,8 @@ The encoder and decoder both walk the schema in a fixed order: levels ascending,
 
 | Slot kind                                              | Table                                | Options (excl. null) | Bits | Encoded? | Availability |
 | ------------------------------------------------------ | ------------------------------------ | -------------------- | ---- | -------- | ------------ |
-| `*KeystoneFeature` (incl. `firearmMasteryUltimateKeystoneFeature`) | Shared keystone-feature table | —          | —    | **No**   | Fixed by schema |
-| `*Talent` (`firstArchetypeTalent`, `secondArchetypeTalent`, `exemplarArchetypeTalent`, `commonTalent`) | Shared talent table (all archetypes) | ≤ 511 | 9 | Yes | [Talents and abilities](./availability-rules.md#talents-and-abilities) |
+| `keystoneFeature` (incl. ultimates such as Firearm Mastery) | Keystone feature table (`KEYSTONE_FEATURES`) | — | —    | **No**   | Fixed by schema |
+| `*Talent` (`firstArchetypeTalent`, `secondArchetypeTalent`, `exemplarArchetypeTalent`, `commonTalent`) | Shared talent table (all archetypes) | ≤ 1023 | 10 | Yes | [Talents and abilities](./availability-rules.md#talents-and-abilities) |
 | `*Ability` (`firstArchetypeAbility`, …)                | Shared ability table (all archetypes)| ≤ 255                | 8    | Yes      | [Talents and abilities](./availability-rules.md#talents-and-abilities) |
 | `skillIncrease`                                        | Shared skill table                   | 13                   | 4    | Yes      | [Increase tables](./availability-rules.md#increase-tables) |
 | `characteristicIncrease`                               | Shared characteristic table          | 9                    | 4    | Yes      | [Increase tables](./availability-rules.md#increase-tables) |
@@ -190,14 +234,16 @@ The encoder and decoder both walk the schema in a fixed order: levels ascending,
 
 **Keystone features are never encoded.** They are fixed for a given schema and the user cannot change them, so they have no entry in the choices arrays. Anything that shows them, such as the level-up screen, reads them straight from the schema. The Firearm Mastery ultimate is a keystone feature.
 
+Every keystone feature has the one slot kind `keystoneFeature`. A schema names which feature it is with a slot object, `{ kind: "keystoneFeature", featureKey }`, written in data as `keystoneFeature("runAndGun")`. Choice slots stay plain kind strings. The keys point into the keystone feature table in `src/gamedata/keystoneFeatures.ts`, which holds each feature's name and whether it is an ultimate. Because they are never encoded, keystone features have string keys, not numeric IDs, and the table can change without a format version bump. `keystoneFeature()` only accepts keys that exist in the table, so a typo fails to type-check.
+
 Slot kinds fall into two groups:
 
 - **Shared tables**: talents, abilities, skills and characteristics. Each of these has its own table, and that one table serves every archetype, so an ID means the same talent, ability, skill or characteristic whichever archetype references it.
-- **Own tables**: ultimate upgrades such as `firearmMasteryUpgrade`, and any other kinds still to be defined. Each has a table of its own, so an ID only has meaning within that ultimate. Every ultimate upgrade table has exactly 4 options, so with null they always take 3 bits. Other own-table kinds set their bit width separately.
+- **Own tables**: ultimate upgrades such as `firearmMasteryUpgrade`, and any other kinds still to be defined. Each has a table of its own, so an ID only has meaning within that ultimate. Every ultimate upgrade table has exactly 4 options, so with null they always take 3 bits. Each ultimate's upgrade slot kind, such as `firearmMasteryUpgrade` or `dispatchUpgrade`, is listed by name with its bit width, like every other choice slot kind.
 
-All `*Talent` kinds encode the same way, as a 9-bit talent ID. They differ only in availability.
+All `*Talent` kinds encode the same way, as a 10-bit talent ID. They differ only in availability.
 
-To add a new slot kind, give it a table and a bit width, register it in the slot-kind lookup (`src/model/slotKinds.ts`) used by the encoder, decoder and validator, and define its availability function in [Availability Rules](./availability-rules.md#slot-kinds). Adding one changes the layout, so bump the format version (§4.1).
+To add a new slot kind, including a new ultimate's upgrade slot, give it a table and a bit width, add it to its slot-kind type and to `CHOICE_SLOT_KIND_BITS` in `src/model/slotKinds.ts` (used by the encoder, decoder and validator), and define its availability function in [Availability Rules](./availability-rules.md#slot-kinds). Adding one changes the layout, so bump the format version (§4.1).
 
 ### 4.4 Stream order
 
@@ -262,6 +308,22 @@ The validator decides what a build may **hold**. The UI decides what the user ma
 
 In both cases, the **choices inside** the archetype are still validated and nulled individually (§6).
 
+### Confirming archetype switches
+
+Switching archetype can undo choices: an archetype's choices are discarded when it is switched or cleared ([decision 038](./decisions.md#038-selecting-an-archetype-resets-its-choices)), and a new first archetype can make the validator null the second. So before applying an archetype change, the UI asks: *"Switching archetype might undo some of your previous choices, do you want to proceed?"*
+
+It asks when the change would:
+
+| Change                                   | Undoes                                                    |
+| ---------------------------------------- | --------------------------------------------------------- |
+| Switch or clear the first archetype      | The first archetype's choices, if any are non-null         |
+| Switch or clear the second archetype     | The second archetype's choices, if any are non-null        |
+| Switch the first archetype to one that doesn't allow the selected second archetype | The second archetype, which the validator nulls, with its choices |
+
+It doesn't ask when nothing would be lost: selecting an archetype for the first time, switching one with only empty choices, switching the first archetype to one that also allows the second, or clearing the first archetype (the second is kept, see above). Toggling the Exemplar never asks.
+
+`undoesEarlierChoices(build, change)` in `src/ui/archetypeEdits.ts` makes this decision before the change is applied. It uses the same availability function as the validator (`availableSecondArchetypeIds`), so it predicts exactly what validation would null. **Proceed** applies the change through the usual edit path, and **Cancel** or Escape discards it, leaving the build and URL untouched.
+
 Within a slot, the UI lets the user pick exactly what the validator accepts. Talent and ability slots also show options that can't be picked yet ([UI: shown vs. selectable](./availability-rules.md#ui-shown-vs-selectable)). How they are displayed is described under [Level-up screen](./ui-design.md#level-up-screen).
 
 ### Logging
@@ -284,3 +346,5 @@ Because a nulled choice is never applied, anything later that depended on it fai
 A choice is legal only if its prerequisites were met **before** it, either at an earlier level or in an earlier slot of the same level. For example, at level 5 (`["characteristicIncrease", "firstArchetypeTalent"]`) the talent can rely on the characteristic increase taken just before it, but not the other way round. A prerequisite taken later does not count, even if the finished build would have it.
 
 The validator is pure: `(BuildPlan) → BuildPlan`. Running it on its own output changes nothing, so it is safe to run after every change.
+
+**Implemented** (`src/validation/validator.ts`, `replay.ts`): the static choices, the starting characteristic increases and the archetypes are checked first. Then `initialState` builds the state, and `replayChoices` walks every archetype choice in level order, as above. Each slot kind uses its availability function from `src/availability`: increases (source and cap), talents (pool, requirements, no repeats), abilities (pool, no repeats) and ultimate upgrades (1–4, each once). Talents don't yet grant lists or characteristic modifiers, because that data doesn't exist. The UI runs the validator on every edit, so changing an origin, for example, nulls a later skill increase that only the old origin unlocked.

@@ -1,0 +1,42 @@
+.archetype-pick {
+  padding: 10px 26px 48px;
+
+  @media (max-width: 640px) {
+    padding-inline: 16px;
+  }
+}
+
+.archetype-pick__title {
+  margin: 0 0 13px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.archetype-pick__static-choices,
+.archetype-pick__starting-increases,
+.archetype-pick__archetypes {
+  max-width: var(--content-width);
+  margin: 0 auto;
+}
+
+.archetype-pick__static-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.archetype-pick__starting-increases {
+  margin-top: 10px;
+}
+
+.archetype-pick__archetypes {
+  margin-top: 11px;
+}

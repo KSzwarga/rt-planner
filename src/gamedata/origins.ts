@@ -1,29 +1,30 @@
 import { CHARACTERISTIC } from './characteristics'
+import { ORIGIN } from './originIds'
 import type { OriginEntry } from './types'
 
 export const ORIGINS: readonly OriginEntry[] = [
   {
-    id: 1,
+    id: ORIGIN.astraMilitarumCommander,
     name: 'Astra Militarum Commander',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.BS, amount: 5 },
       { characteristicId: CHARACTERISTIC.FEL, amount: 5 },
     ],
     grantsTalentLists: ['astraMilitarumCommander'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['astraMilitarumCommander'],
   },
   {
-    id: 2,
+    id: ORIGIN.commissar,
     name: 'Commissar',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.BS, amount: 5 },
       { characteristicId: CHARACTERISTIC.FEL, amount: 5 },
     ],
     grantsTalentLists: ['commissar'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['commissar'],
   },
   {
-    id: 3,
+    id: ORIGIN.crimeLord,
     name: 'Crime Lord',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.WS, amount: 5 },
@@ -33,26 +34,26 @@ export const ORIGINS: readonly OriginEntry[] = [
     grantsAbilityLists: [],
   },
   {
-    id: 4,
+    id: ORIGIN.ministorumPriest,
     name: 'Ministorum Priest',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.WP, amount: 10 },
     ],
     grantsTalentLists: ['ministorumPriest'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['ministorumPriest'],
   },
   {
-    id: 5,
+    id: ORIGIN.navyOfficer,
     name: 'Navy Officer',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
       { characteristicId: CHARACTERISTIC.PER, amount: 5 },
     ],
     grantsTalentLists: ['navyOfficer'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['navyOfficer'],
   },
   {
-    id: 6,
+    id: ORIGIN.noble,
     name: 'Noble',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.INT, amount: 5 },
@@ -62,83 +63,83 @@ export const ORIGINS: readonly OriginEntry[] = [
     grantsAbilityLists: [],
   },
   {
-    id: 7,
+    id: ORIGIN.sanctionedPsykerBiomancer,
     name: 'Sanctioned Psyker: Biomancer',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
       { characteristicId: CHARACTERISTIC.WP, amount: 5 },
     ],
-    grantsTalentLists: ['sanctionedPsykerBiomancer'],
-    grantsAbilityLists: [],
+    grantsTalentLists: ['psyker', 'sanctionedPsyker', 'psykerBiomancy'],
+    grantsAbilityLists: ['psykerBiomancy'],
   },
   {
-    id: 8,
+    id: ORIGIN.sanctionedPsykerDiviner,
     name: 'Sanctioned Psyker: Diviner',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
       { characteristicId: CHARACTERISTIC.WP, amount: 5 },
     ],
-    grantsTalentLists: ['sanctionedPsykerDiviner'],
-    grantsAbilityLists: [],
+    grantsTalentLists: ['psyker', 'sanctionedPsyker', 'psykerDivination'],
+    grantsAbilityLists: ['psykerDivination'],
   },
   {
-    id: 9,
+    id: ORIGIN.sanctionedPsykerPyromancer,
     name: 'Sanctioned Psyker: Pyromancer',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
       { characteristicId: CHARACTERISTIC.WP, amount: 5 },
     ],
-    grantsTalentLists: ['sanctionedPsykerPyromancer'],
-    grantsAbilityLists: [],
+    grantsTalentLists: ['psyker', 'sanctionedPsyker', 'psykerPyromancy'],
+    grantsAbilityLists: ['psykerPyromancy'],
   },
   {
-    id: 10,
+    id: ORIGIN.sanctionedPsykerSanctic,
     name: 'Sanctioned Psyker: Sanctic',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
       { characteristicId: CHARACTERISTIC.WP, amount: 5 },
     ],
-    grantsTalentLists: ['sanctionedPsykerSanctic'],
-    grantsAbilityLists: [],
+    grantsTalentLists: ['psyker', 'sanctionedPsyker', 'psykerSanctic'],
+    grantsAbilityLists: ['psykerSanctic'],
   },
   {
-    id: 11,
+    id: ORIGIN.sanctionedPsykerTelepath,
     name: 'Sanctioned Psyker: Telepath',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
       { characteristicId: CHARACTERISTIC.WP, amount: 5 },
     ],
-    grantsTalentLists: ['sanctionedPsykerTelepath'],
-    grantsAbilityLists: [],
+    grantsTalentLists: ['psyker', 'sanctionedPsyker', 'psykerTelepathy'],
+    grantsAbilityLists: ['psykerTelepathy'],
   },
   {
-    id: 12,
+    id: ORIGIN.arbitratorVigilant,
     name: 'Arbitrator: Vigilant',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.BS, amount: 5 },
       { characteristicId: CHARACTERISTIC.PER, amount: 5 },
     ],
     grantsTalentLists: ['arbitrator'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['arbitrator'],
   },
   {
-    id: 13,
+    id: ORIGIN.arbitratorCastigator,
     name: 'Arbitrator: Castigator',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.FEL, amount: 5 },
       { characteristicId: CHARACTERISTIC.WP, amount: 5 },
     ],
     grantsTalentLists: ['arbitrator'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['arbitrator'],
   },
   {
-    id: 14,
+    id: ORIGIN.arbitratorSubductor,
     name: 'Arbitrator: Subductor',
     characteristicModifiers: [
       { characteristicId: CHARACTERISTIC.WS, amount: 5 },
       { characteristicId: CHARACTERISTIC.TGH, amount: 5 },
     ],
     grantsTalentLists: ['arbitrator'],
-    grantsAbilityLists: [],
+    grantsAbilityLists: ['arbitrator'],
   },
 ]

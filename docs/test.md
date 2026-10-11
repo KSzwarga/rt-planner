@@ -6,8 +6,8 @@ How RT Planner is tested. The code under test is described in [Architecture](./A
 
 | Layer   | Scope                                   | Runner     | Location                      | Runs in  |
 | ------- | --------------------------------------- | ---------- | ----------------------------- | -------- |
-| Unit    | One function or method                  | Vitest     | `src/**/*.test.ts`            | Node     |
-| Service | Several modules working together        | Vitest     | `src/**/*.service.test.ts`    | Node     |
+| Unit    | One function or method                  | Vitest     | `test/**/*.test.ts`           | Node     |
+| Service | Several modules working together        | Vitest     | `test/**/*.service.test.ts`   | Node     |
 | E2E     | UI components and whole user workflows  | Playwright | `e2e/*.spec.ts`               | Chromium |
 
 Each layer tests what the layer below it can't. Unit tests pin down the details, service tests prove that the parts fit together, and e2e tests prove that the user can actually do it in a browser.
@@ -28,7 +28,7 @@ Guidelines:
 
 - Build the input directly, such as a `CharacterState`, instead of producing it by running other code. That way a failing unit test points at one function.
 - Cover edge cases here: null everywhere, maximum IDs, caps reached, requirements just met or just missed.
-- Place the test next to the code it tests: `availability/characteristicIncrease.ts` → `availability/characteristicIncrease.test.ts`.
+- Place the test in `test/`, mirroring the path of the code it tests under `src/`: `src/availability/characteristicIncrease.ts` → `test/availability/characteristicIncrease.test.ts`. Tests import the code through relative paths, such as `../../src/availability/characteristicIncrease`.
 
 ## Service tests
 
@@ -83,4 +83,4 @@ Guidelines:
 
 Browsers are not installed by npm. Each machine needs `npx playwright install chromium` once before running the e2e tests.
 
-The runners never pick up each other's files. Vitest's `include` in `vite.config.ts` is limited to `src/`, and Playwright's `testDir` is `e2e/`.
+The runners never pick up each other's files. Vitest's `include` in `vite.config.ts` is limited to `test/`, and Playwright's `testDir` is `e2e/`. `tsconfig.app.json` type-checks `test/` together with `src/`.

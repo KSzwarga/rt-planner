@@ -28,13 +28,14 @@ So the UI can never offer something the validator would remove, and the validato
 
 | Slot kind                                                         | Rules                                                             |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `homeworldId`, `originId`, `triumphId`, `darkestHourId`           | Every entry of the table is always available                      |
 | `startingCharacteristicIncreasesIds` (6 static slots)             | [Starting characteristic increases](#starting-characteristic-increases) |
 | `characteristicIncrease`                                          | [Increase tables](#increase-tables), [Characteristic increase](#characteristic-increase) |
 | `skillIncrease`                                                   | [Increase tables](#increase-tables), [Skill increase](#skill-increase) |
 | `firstArchetypeTalent`, `secondArchetypeTalent`, `exemplarArchetypeTalent`, `commonTalent` | [Talents and abilities](#talents-and-abilities) |
 | `firstArchetypeAbility`, `secondArchetypeAbility`, `exemplarArchetypeAbility` | [Talents and abilities](#talents-and-abilities)        |
 | `*Upgrade` (ultimate upgrades, e.g. `firearmMasteryUpgrade`)      | [Ultimate upgrades](#ultimate-upgrades)                           |
-| `*KeystoneFeature`                                                | Not a choice. Fixed by the schema, never checked, no effect on the state.                              |
+| `keystoneFeature`                                                 | Not a choice. Fixed by the schema, never checked, no effect on the state.                              |
 
 Whether an archetype itself is allowed (second archetype after first, Exemplar) is an archetype-level rule, covered in [Architecture §6](./Architecture.md#6-validation).
 
@@ -98,12 +99,23 @@ interface IncreaseEntry {
   name: string;
   availableForOrigins: Id[];        // every slot, if the build has one of these origins
   availableForHomeworlds: Id[];     // every slot, if the build has one of these homeworlds
-  availableForArchetypes: Id[];     // only the slots of these archetypes
+  availableForFirstArchetypes: Id[];  // only the slots of these first archetypes
+  availableForSecondArchetypes: Id[]; // only the slots of these second archetypes
   availableForTalents: Id[];        // every slot after one of these talents is taken
 }
 ```
 
-Example: Strength is available for the Soldier and Warrior archetypes, the Commissar origin, and the Void-born homeworld, or after the talent Mighty Shot has been taken.
+First and second archetypes are separate tables with overlapping IDs, so each tier has its own field ([decision 042](./decisions.md#042-increase-availability-per-archetype-tier-and-talent-requirements)). The **Exemplar can improve every characteristic and skill**, so it needs no field: in Exemplar slots, Rule 1 always holds and only the cap applies.
+
+**Implemented:** `CHARACTERISTICS` (`src/gamedata/characteristics.ts`) and `SKILLS` (`src/gamedata/skills.ts`) hold:
+
+- `availableForFirstArchetypes` and `availableForSecondArchetypes`, from each archetype's page on the Rogue Trader fandom wiki.
+- `availableForOrigins`, from each origin's *On advancement this Origin makes available* line on the [Origin](https://roguetrader.wiki.fextralife.com/Origin) and [Arbitrator](https://roguetrader.wiki.fextralife.com/Arbitrator) pages. For example, Commissar unlocks FEL and Coercion, and every Sanctioned Psyker unlocks WP and Lore (Warp), which no archetype offers.
+- `availableForHomeworlds`, empty for now: homeworlds don't unlock any characteristic or skill yet.
+
+`availableForTalents` is added once its data exists. The rule is `increaseUnavailableReason` / `availableIncreaseIds` in `src/availability/increases.ts`.
+
+Example: Strength is available for the Soldier and Warrior first archetypes, the Vanguard, Arch-Militant and Executioner second archetypes, the Commissar origin, and the Void-born homeworld, or after the talent Mighty Shot has been taken.
 
 ```ts
 {
@@ -111,7 +123,8 @@ Example: Strength is available for the Soldier and Warrior archetypes, the Commi
   name: "Strength",
   availableForOrigins: [/* Commissar */],
   availableForHomeworlds: [/* Void-born */],
-  availableForArchetypes: [/* Soldier, Warrior */],
+  availableForFirstArchetypes: [/* Soldier, Warrior */],
+  availableForSecondArchetypes: [/* Vanguard, Arch-Militant, Executioner */],
   availableForTalents: [/* Mighty Shot */],
 }
 ```
@@ -124,7 +137,7 @@ An entry is available in a slot if **any** of its `availableFor*` conditions hol
 | ------------------------ | ------------------------------------------------------------ |
 | `availableForOrigins`    | The build's origin is listed (applies to every slot)         |
 | `availableForHomeworlds` | The build's homeworld is listed (applies to every slot)      |
-| `availableForArchetypes` | The archetype that **owns the slot** is listed               |
+| `availableForFirstArchetypes`, `availableForSecondArchetypes` | The archetype that **owns the slot** is listed in its tier's field. Always holds in Exemplar slots |
 | `availableForTalents`    | A listed talent was taken **before** the slot, in any archetype |
 
 ### Rule 2: cumulative cap
@@ -154,7 +167,8 @@ Entry `e` is available in slot `s` when:
 ```
 (build.origin    ∈ e.availableForOrigins
   OR build.homeworld ∈ e.availableForHomeworlds
-  OR owner(s)        ∈ e.availableForArchetypes
+  OR owner(s)        ∈ e.availableForFirstArchetypes / e.availableForSecondArchetypes (by tier)
+  OR s is an Exemplar slot
   OR any talent taken before s ∈ e.availableForTalents)
 AND
 count(e taken before s) < cap(archetype of s)
@@ -184,6 +198,8 @@ The 6 `startingCharacteristicIncreasesIds` use the same table, with their own ru
 - They do **not** count toward the cap. A build can take STR in its starting increases and still take it twice more in the first archetype.
 - **Max 2 of the same characteristic** among the 6. They can be anything from 6 different characteristics to 3 characteristics taken twice each. Once a characteristic has been picked twice, it is no longer offered in the remaining starting slots, and a third copy in a link is nulled.
 
+The rule is `availableStartingIncreaseIds(earlierIds, characteristics)` in `src/availability/startingIncreases.ts`. The validator checks the 6 slots in order, each against the legal slots before it, so the first two copies of a characteristic are kept and any later one is nulled.
+
 ## Skill increase
 
 Applies to `skillIncrease` slots. Uses the skill table, with the same rules as characteristic increases.
@@ -210,7 +226,14 @@ IDs in both tables are part of the URL format and must not be reordered.
 
 ## Talents and abilities
 
-`*Talent` and `*Ability` slots follow the same rules. Each has its **own table** and its **own set of lists**. Everything below says "talent", and it applies to abilities in the same way, using the ability table and ability lists, with one difference: **there are no common abilities**. There is no `common` ability list and no common ability slot. Every ability slot is an archetype ability slot.
+`*Talent` and `*Ability` slots follow the same rules. Each has its **own table** and its **own set of lists**. Everything below says "talent", and it applies to abilities in the same way, using the ability table and ability lists, with one difference: **there are no common abilities**. There is no `common` ability list and no common ability slot. Every ability slot is an archetype ability slot. Abilities have no requirements yet, so an ability in the pool is selectable unless it was already taken. The Exemplar has no abilities of its own, so `exemplarArchetypeAbility` slots offer both of its archetypes' ability lists.
+
+**Implemented:** `src/gamedata/abilities.ts` holds 109 abilities with `id`, `name` and `description`, and `abilityLists.ts` holds 22 lists: one per archetype, one each for the Arbitrator, Commissar, Navy Officer, Astra Militarum Commander and Ministorum Priest origins, and one per psyker discipline. Both are generated from the [wiki's abilities table](https://roguetrader.wiki.fextralife.com/Abilities) by each ability's source, the same way as talents. Origins grant their list through `grantsAbilityLists`, and each Sanctioned Psyker grants its discipline's list. Left out:
+
+- **Keystone abilities and ultimates** (Heroic Acts and Desperate Measures). They are granted, never chosen, and are already keystone features.
+- **Overseer, Navigator, Tech-Priest** and other sources outside the planner's scope.
+
+The rule is `abilityOptions` / `availableAbilityIds` in `src/availability/abilities.ts`.
 
 They work differently from increases. An increase entry stores the sources that unlock it (`availableFor*`). For talents, the **sources store lists**, and the talent entry only stores its **requirements**.
 
@@ -234,6 +257,8 @@ interface TalentEntry {
 }
 ```
 
+**Implemented so far:** `src/gamedata/talents.ts` holds 546 talents with `id`, `name` and `description` (the effect text), generated from the [wiki's talents table](https://roguetrader.wiki.fextralife.com/Talents). IDs follow alphabetical order. Requirements live in their own file (see [Rule 2](#rule-2-requirements-which-shown-talents-are-selectable)). `grantsTalentLists`, `grantsAbilityLists` and `characteristicModifiers` are added once their data exists. The rule is `talentOptions` / `availableTalentIds` in `src/availability/talents.ts`.
+
 ### Lists
 
 A list is a named array of talent IDs. It holds no rules, only membership.
@@ -248,7 +273,21 @@ interface TalentList {
 }
 ```
 
-Lists are never encoded, only talent IDs are, so list keys can be strings. For whether editing lists needs a version bump, see [Architecture §4.1](./Architecture.md#41-version).
+Lists are never encoded, only talent IDs are, so list keys can be strings.
+
+`src/gamedata/talentLists.ts` holds the lists, generated from the wiki's talents table by each talent's source:
+
+| Source on the wiki                            | List                                                     |
+| --------------------------------------------- | -------------------------------------------------------- |
+| All Archetypes                                | `common`                                                 |
+| An archetype, such as Soldier or Assassin     | That archetype's list, such as `soldier` or `assassin`   |
+| Exemplar                                      | `exemplar`                                               |
+| An origin, such as Arbitrator                 | That origin's list, such as `arbitrator`                 |
+| Psyker, Sanctioned Psyker                     | `psyker`, `sanctionedPsyker`                             |
+| A psyker discipline, such as Psyker – Pyromancy | `psykerPyromancy`, `psykerBiomancy`, `psykerDivination`, `psykerSanctic`, `psykerTelepathy` |
+| A homeworld, such as Hive World               | That homeworld's list, such as `hiveWorld`               |
+
+Talents from other sources, such as Overseer, colony traits, convictions, companion-only talents (including Navigator and Unsanctioned Psyker) and one-off event rewards, are left out. For whether editing lists needs a version bump, see [Architecture §4.1](./Architecture.md#41-version).
 
 Lists come from these sources:
 
@@ -292,7 +331,9 @@ The slot kind decides which archetype list counts, if any:
 
 ### Rule 2: requirements (which shown talents are selectable)
 
-Requirements are stored on the talent. A talent in the pool is **selectable** only if every one of its requirements holds against the [character state](#character-state) just before the slot.
+Requirements are stored per talent. A talent in the pool is **selectable** only if every one of its requirements holds against the [character state](#character-state) just before the slot.
+
+They live in `src/gamedata/talentRequirements.ts`, keyed by talent ID, apart from the generated `talents.ts`, so regenerating the talent table from the wiki never loses them ([decision 042](./decisions.md#042-increase-availability-per-archetype-tier-and-talent-requirements)). `talentRequirements(id)` returns a talent's requirements, or none. So far: Heavy Armour Proficiency needs 45 Strength, and each *Advanced Skill* talent needs its *Base Skill* talent.
 
 ```ts
 type Requirement =

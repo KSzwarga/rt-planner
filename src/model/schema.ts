@@ -1,7 +1,7 @@
-import { type ChoiceSlotKind, isKeystoneFeature, type SlotKind } from './slotKinds'
+import { type ChoiceSlotKind, isKeystoneFeature, type SchemaSlot } from './slotKinds'
 
 /** An archetype's progression: the slots granted at each level, in order. See Architecture §4.3. */
-export type Schema = Readonly<Record<number, readonly SlotKind[]>>
+export type Schema = Readonly<Record<number, readonly SchemaSlot[]>>
 
 /** A slot that holds a user choice. Its position in `choiceSlots` is its index in the choices array. */
 export interface ChoiceSlot {
@@ -20,11 +20,16 @@ export function choiceSlots(schema: Schema): ChoiceSlot[] {
 
   const slots: ChoiceSlot[] = []
   for (const level of levels) {
-    for (const kind of schema[level]) {
-      if (!isKeystoneFeature(kind)) {
-        slots.push({ level, kind })
+    for (const slot of schema[level]) {
+      if (!isKeystoneFeature(slot)) {
+        slots.push({ level, kind: slot })
       }
     }
   }
   return slots
+}
+
+/** The choices of an archetype that was just selected: one null per choice slot of its schema. */
+export function emptyChoices(schema: Schema): null[] {
+  return choiceSlots(schema).map(() => null)
 }

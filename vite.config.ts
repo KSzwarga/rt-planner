@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     // Unit tests only. Playwright specs in e2e/ run with `npm run test:e2e`.
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['test/**/*.test.{ts,tsx}'],
   },
 })
