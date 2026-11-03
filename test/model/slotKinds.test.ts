@@ -19,6 +19,8 @@ describe('choiceSlotBits', () => {
     ['deathWaltzUpgrade', 3],
     ['dispatchUpgrade', 3],
     ['carnivalOfMiseryUpgrade', 3],
+    ['overchargeUpgrade', 3],
+    ['familiar', 3],
   ])('%s takes %d bits', (kind, bits) => {
     expect(choiceSlotBits(kind)).toBe(bits)
   })

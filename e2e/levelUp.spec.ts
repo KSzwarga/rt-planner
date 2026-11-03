@@ -118,3 +118,52 @@ test('level-up choices are saved in the link', async ({ page }) => {
   await expect(node(page, 2, 'Skill increase')).toHaveAccessibleName('Level 2 Skill increase: Medicae')
   void options
 })
+
+test("the Overseer's familiar decides Overcharge and unlocks its upgrades", async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('group', { name: 'First archetype' }).getByRole('button', { name: 'Officer' }).click()
+  await page.getByRole('button', { name: 'Return' }).click()
+  await page.getByRole('group', { name: 'Second archetype' }).getByRole('button', { name: 'Overseer' }).click()
+
+  // Without a familiar, Overcharge has no effect to show and its upgrades can't be picked.
+  await node(page, 27, 'Ultimate upgrade').click()
+  await expect(option(page, 'Upgrade 1')).toHaveAttribute('aria-disabled', 'true')
+  await page.getByRole('button', { name: 'Level 19 keystone feature: Overcharge' }).click()
+  await expect(page.getByText('Its effect depends on the familiar. Pick a familiar to see it.')).toBeVisible()
+
+  await node(page, 16, 'Familiar').click()
+  await option(page, 'Cyber-Eagle').click()
+  await expect(node(page, 16, 'Familiar')).toHaveAccessibleName('Level 16 Familiar: Cyber-Eagle')
+
+  await page.getByRole('button', { name: 'Level 19 keystone feature: Overcharge' }).click()
+  await expect(page.getByText(/Heroic Act: The cyber-eagle immediately heals/)).toBeVisible()
+
+  await node(page, 27, 'Ultimate upgrade').click()
+  await option(page, 'Upgrade 1').click()
+  await expect(node(page, 27, 'Ultimate upgrade')).toHaveAccessibleName('Level 27 Ultimate upgrade: Upgrade 1')
+
+  // Switching familiar keeps the upgrade: it becomes the new familiar's.
+  await node(page, 16, 'Familiar').click()
+  await option(page, 'Cyber-Mastiff').click()
+  await expect(node(page, 27, 'Ultimate upgrade')).toHaveAccessibleName('Level 27 Ultimate upgrade: Upgrade 1')
+})
+
+test('talents with an icon show it in the option list, on their node and in the details', async ({ page }) => {
+  // The Sanctioned Psyker: Diviner origin grants the Divination talents, such as Fatebringer.
+  await page.goto('/')
+  await page.getByRole('button', { name: /Origin/ }).click()
+  await page.getByRole('menuitem', { name: 'Sanctioned Psyker' }).hover()
+  await page.getByRole('menuitemradio', { name: 'Diviner' }).click()
+  await page.getByRole('group', { name: 'First archetype' }).getByRole('button', { name: 'Soldier' }).click()
+
+  await node(page, 7, 'Common talents').click()
+  const icon = option(page, 'Fatebringer').locator('img')
+  await expect(icon).toHaveAttribute('src', /\/icons\/talents\/fatebringer\.webp$/)
+  await expect(icon).toHaveJSProperty('naturalWidth', 48)
+  // A talent without an icon keeps its abbreviation.
+  await expect(option(page, 'Base Skill: Athletics').locator('img')).toHaveCount(0)
+
+  await option(page, 'Fatebringer').click()
+  await expect(node(page, 7, 'Common talents').locator('img')).toHaveAttribute('src', /fatebringer\.webp$/)
+  await expect(page.getByRole('region', { name: 'Details' }).locator('img')).toHaveAttribute('src', /fatebringer\.webp$/)
+})

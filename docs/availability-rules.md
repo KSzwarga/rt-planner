@@ -35,6 +35,7 @@ So the UI can never offer something the validator would remove, and the validato
 | `firstArchetypeTalent`, `secondArchetypeTalent`, `exemplarArchetypeTalent`, `commonTalent` | [Talents and abilities](#talents-and-abilities) |
 | `firstArchetypeAbility`, `secondArchetypeAbility`, `exemplarArchetypeAbility` | [Talents and abilities](#talents-and-abilities)        |
 | `*Upgrade` (ultimate upgrades, e.g. `firearmMasteryUpgrade`)      | [Ultimate upgrades](#ultimate-upgrades)                           |
+| `familiar`                                                        | [Familiar](#familiar)                                             |
 | `keystoneFeature`                                                 | Not a choice. Fixed by the schema, never checked, no effect on the state.                              |
 
 Whether an archetype itself is allowed (second archetype after first, Exemplar) is an archetype-level rule, covered in [Architecture §6](./Architecture.md#6-validation).
@@ -54,6 +55,7 @@ Whether an archetype itself is allowed (second archetype after first, Exemplar) 
 | `increaseCounts`       | Times each entry was taken in `characteristicIncrease` / `skillIncrease` slots, keyed by **table and ID** |
 | `talentsTaken`, `abilitiesTaken` | IDs taken so far                                              |
 | `upgradesTaken`        | Ultimate upgrades picked so far, keyed by **ultimate and ID**           |
+| `familiar`             | The Overseer's familiar, once its `familiar` slot is passed. Null before that, and for every other archetype |
 | `talentLists`, `abilityLists` | Lists unlocked so far (see [Lists](#lists))                      |
 
 ### How each choice changes the state
@@ -67,6 +69,7 @@ Whether an archetype itself is allowed (second archetype after first, Exemplar) 
 | Talent                              | Record it as taken, apply its `characteristicModifiers`, unlock its `grantsTalentLists` / `grantsAbilityLists` |
 | Ability                             | Record it as taken                                                        |
 | Ultimate upgrade                    | Record it as taken                                                        |
+| Familiar                            | Set `familiar`. Its lists join the Overseer's archetype lists, and it decides the Overcharge ultimate |
 
 The replay applies only **legal** choices, and only after the slot they are in. So anything a choice grants counts only for **later** slots.
 
@@ -257,7 +260,7 @@ interface TalentEntry {
 }
 ```
 
-**Implemented so far:** `src/gamedata/talents.ts` holds 540 talents with `id`, `name` and `description` (the effect text), generated from the [wiki's talents table](https://roguetrader.wiki.fextralife.com/Talents). IDs follow alphabetical order. Requirements live in their own file (see [Rule 2](#rule-2-requirements-which-shown-talents-are-selectable)). The lists a talent grants live in `src/gamedata/talentGrants.ts`, keyed by talent ID like the requirements, and the replay applies them to every later slot. No talent grants lists yet. `characteristicModifiers` is added once its data exists. The rule is `talentOptions` / `availableTalentIds` in `src/availability/talents.ts`.
+**Implemented so far:** `src/gamedata/talents.ts` holds 624 talents with `id`, `name` and `description` (the effect text): 540 generated from the [wiki's talents table](https://roguetrader.wiki.fextralife.com/Talents), and 84 appended by hand from the GameFAQs guide, which has talents the wiki's table leaves out: the Overseer's 51, and 33 common, Exemplar, homeworld and origin talents ([decision 053](./decisions.md#053-the-guides-missing-common-homeworld-and-origin-talents)). IDs follow alphabetical order. Requirements live in their own file (see [Rule 2](#rule-2-requirements-which-shown-talents-are-selectable)). The lists a talent grants live in `src/gamedata/talentGrants.ts`, keyed by talent ID like the requirements, and the replay applies them to every later slot. No talent grants lists yet. `characteristicModifiers` is added once its data exists. The rule is `talentOptions` / `availableTalentIds` in `src/availability/talents.ts`.
 
 ### Lists
 
@@ -287,7 +290,9 @@ Lists are never encoded, only talent IDs are, so list keys can be strings.
 | A psyker discipline, such as Psyker – Pyromancy | `psykerPyromancy`, `psykerBiomancy`, `psykerDivination`, `psykerSanctic`, `psykerTelepathy` |
 | A homeworld, such as Hive World               | That homeworld's list, such as `hiveWorld`               |
 
-Talents from other sources, such as Overseer, colony traits, convictions, companion-only talents (including Navigator and Unsanctioned Psyker) and one-off event rewards, are left out. For whether editing lists needs a version bump, see [Architecture §4.1](./Architecture.md#41-version).
+The Overseer's talents are not in the wiki's table either. They come from the GameFAQs guide's Talents (Advanced Archetypes) page and are appended by hand: each goes to the familiar its "<Familiar> Proficiency" prerequisite names (`cyberMastiff`, `psyberRaven`, `servoSkullSwarm`, `cyberEagle`), the rest to `overseer`, and the Exemplar's to `exemplar` ([decision 050](./decisions.md#050-advanced-archetype-prerequisites-and-the-overseers-talents)).
+
+Talents from other sources, such as colony traits, convictions, companion-only talents (including Navigator and Unsanctioned Psyker) and one-off event rewards, are left out. For whether editing lists needs a version bump, see [Architecture §4.1](./Architecture.md#41-version).
 
 Lists come from these sources:
 
@@ -316,12 +321,12 @@ The slot kind decides which archetype list counts, if any:
 | Slot kind                    | Pool                                       |
 | ---------------------------- | ------------------------------------------ |
 | `firstArchetypeTalent`       | first archetype's talent list ∪ build lists  |
-| `secondArchetypeTalent`      | second archetype's talent list ∪ build lists |
+| `secondArchetypeTalent`      | second archetype's talent list ∪ its familiar's ∪ build lists |
 | `exemplarArchetypeTalent`    | Exemplar's talent list ∪ build lists         |
 | `commonTalent`               | build lists                                  |
 | `firstArchetypeAbility`      | first archetype's ability list ∪ build ability lists  |
-| `secondArchetypeAbility`     | second archetype's ability list ∪ build ability lists |
-| `exemplarArchetypeAbility`   | Exemplar's ability list ∪ build ability lists         |
+| `secondArchetypeAbility`     | second archetype's ability list ∪ its familiar's ∪ build ability lists |
+| `exemplarArchetypeAbility`   | both archetypes' ability lists ∪ the familiar's ∪ build ability lists |
 
 **Build lists** are the lists in the state's `talentLists` / `abilityLists`, granted by the origin, the homeworld and earlier talents, plus `common` for talents.
 
@@ -333,7 +338,7 @@ The slot kind decides which archetype list counts, if any:
 
 Requirements are stored per talent. A talent in the pool is **selectable** only if every one of its requirements holds against the [character state](#character-state) just before the slot.
 
-They live in `src/gamedata/talentRequirements.ts`, keyed by talent ID, apart from the generated `talents.ts`, so regenerating the talent table from the wiki never loses them ([decision 042](./decisions.md#042-increase-availability-per-archetype-tier-and-talent-requirements)). `talentRequirements(id)` returns a talent's requirements, or none. So far: Heavy Armour Proficiency needs 45 Strength, and each *Advanced Skill* talent needs its *Base Skill* talent.
+They live in `src/gamedata/talentRequirements.ts`, keyed by talent ID, apart from the generated `talents.ts`, so regenerating the talent table from the wiki never loses them ([decision 042](./decisions.md#042-increase-availability-per-archetype-tier-and-talent-requirements)). `talentRequirements(id)` returns a talent's requirements, or none. So far: Heavy Armour Proficiency needs 45 Strength, each *Advanced Skill* talent needs its *Base Skill* talent, and the basic archetypes' talents need the abilities the GameFAQs guide's [Talents (Basic Archetypes)](https://gamefaqs.gamespot.com/ps5/369358-warhammer-40000-rogue-trader/faqs/82192/talents-basic-archetypes) page lists, such as Tactical Disengage needing Dash. Combat Medicae needs the *Medicae skill*: a Medicae skill increase or Base Skill: Medicae ([decision 048](./decisions.md#048-basic-archetype-talent-prerequisites-and-the-skillincrease-requirement)). The advanced archetypes' talents need the abilities from the guide's Talents (Advanced Archetypes) page. Supporting Zone and some cyber-mastiff and servo-skull swarm talents need a first archetype, the Exemplar's Overseer talents need the Overseer, and the Psychic Awakening talents need an origin other than a Sanctioned Psyker ([decision 050](./decisions.md#050-advanced-archetype-prerequisites-and-the-overseers-talents)). Common weapon talents need a character level, the slot's level: the Bolter, Flame, Melta and Plasma proficiencies 4, Heavy Weapon Proficiency 5, and the Aeldari and Drukhari proficiencies 22 plus the Lore (Xenos) skill. Each weapon expert talent needs its proficiency ([decision 052](./decisions.md#052-common-talent-prerequisites)), and so do the Aeldari, Drukhari and plasma talents added from the guide. Power Armour Proficiency needs 45 Strength ([decision 053](./decisions.md#053-the-guides-missing-common-homeworld-and-origin-talents)).
 
 ```ts
 type Requirement =
@@ -341,7 +346,11 @@ type Requirement =
   | { kind: "talent"; id: Id }                              // talent taken before the slot
   | { kind: "ability"; id: Id }                             // ability taken before the slot
   | { kind: "characteristic"; id: Id; min: number }         // characteristic value >= min
-  | { kind: "anyOf"; of: Requirement[] };                   // at least one holds (OR)
+  | { kind: "skillIncrease"; id: Id }                      // skill taken in a skillIncrease slot before the slot
+  | { kind: "archetype"; tier: "first" | "second"; id: Id } // the build's first or second archetype is this one
+  | { kind: "origin"; id: Id }                              // the build's origin is this one
+  | { kind: "anyOf"; of: Requirement[] }                    // at least one holds (OR)
+  | { kind: "noneOf"; of: Requirement[] };                  // none holds (NOT OR)
 ```
 
 The top-level array is AND, and `anyOf` gives OR. They nest, so "Talent A or Talent B" is:
@@ -407,3 +416,28 @@ Applies to `*Upgrade` slots, such as `firearmMasteryUpgrade`. Each ultimate has 
 - **Each upgrade can be picked only once.** An upgrade already in `upgradesTaken` for that ultimate is not available again. For example, with `firearmMasteryUpgrade` at levels 9 and 15, level 15 offers the 3 upgrades not picked at level 9.
 
 `upgradesTaken` is keyed by **ultimate and ID**, because every ultimate's table uses IDs 1–4.
+
+**An ultimate that depends on the familiar.** The Overseer's ultimate, Overcharge, has a different effect for each familiar. It is still one keystone feature (`overcharge`, marked `dependsOnFamiliar`) with one upgrade slot kind (`overchargeUpgrade`), so the schema, and the URL layout, never depend on the familiar ([decision 049](./decisions.md#049-the-overseer-a-familiar-slot-and-an-ultimate-that-depends-on-it)). Its 4 upgrades are the picked familiar's:
+
+- Before a familiar is picked, an `overchargeUpgrade` slot offers **nothing**. The UI shows the 4 upgrades in red with "Requires a familiar", and the validator nulls them.
+- **Switching familiar keeps the upgrades.** Upgrade *n* becomes upgrade *n* of the new familiar's Overcharge.
+
+The rule is `availableUpgradeIds` / `upgradeNeedsFamiliar` in `src/availability/upgrades.ts`.
+
+## Familiar
+
+Applies to `familiar` slots. Only the Overseer has one: the first choice slot of its schema, at level 16, so every later slot can read it. It uses the familiar table (`src/gamedata/familiars.ts`):
+
+| ID | Familiar          |
+| -- | ----------------- |
+| 1  | Cyber-Mastiff     |
+| 2  | Psyber-Raven      |
+| 3  | Servo-Skull Swarm |
+| 4  | Cyber-Eagle       |
+
+- Every familiar is always available. IDs are part of the URL format.
+- Each familiar has its own talent list (`talentList`) and ability list (`abilityList`). They apply **like an archetype list**, not like a build list: in the Overseer's `secondArchetypeTalent` and `secondArchetypeAbility` slots, right after the Overseer's own list, and in `exemplarArchetypeAbility` slots, which offer both archetypes' ability lists. They never apply in `commonTalent` or first archetype slots.
+- The familiar decides the effect of Overcharge (`ultimateHeroicAct`, `ultimateDesperateMeasures`) and which familiar's Overcharge the upgrade slots upgrade (see [Ultimate upgrades](#ultimate-upgrades)).
+- Switching familiar nulls, through the usual replay, any later talent or ability that only the old familiar's lists offered.
+
+The Overseer's and the familiars' talent lists come from the GameFAQs guide (see [Lists](#lists)). Their ability lists are still empty, because the wiki's abilities table leaves the Overseer out. The rule is `availableFamiliarIds` in `src/availability/familiars.ts`.

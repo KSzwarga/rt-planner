@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CHARACTERISTIC } from '../../src/gamedata/characteristics'
+import { SKILL } from '../../src/gamedata/skills'
 import type { Requirement, TalentList } from '../../src/gamedata/types'
 import {
   availableTalentIds,
@@ -9,7 +10,7 @@ import {
   talentOptions,
   talentPoolLists,
 } from '../../src/availability/talents'
-import { background, characterState, firstArchetype, secondArchetype } from './fixtures'
+import { background, characterState, familiar, firstArchetype, secondArchetype } from './fixtures'
 
 const lists: TalentList[] = [
   { key: 'common', name: 'Common', talentIds: [1, 2] },
@@ -44,6 +45,19 @@ describe('talentPoolLists', () => {
 
   it('has no archetype list in a common talent slot', () => {
     expect(talentPoolLists(soldierNoble, slot('commonTalent'))).toEqual(['common', 'noble'])
+  })
+
+  it("adds the familiar's list after the second archetype's, in its archetype slots only", () => {
+    const withFamiliar = characterState({ ...soldierNoble, familiar: familiar(1, 'cyberMastiff') })
+    expect(talentPoolLists(withFamiliar, slot('secondArchetypeTalent'))).toEqual([
+      'assassin',
+      'cyberMastiff',
+      'common',
+      'noble',
+    ])
+    expect(talentPoolLists(withFamiliar, slot('firstArchetypeTalent'))).toEqual(['soldier', 'common', 'noble'])
+    expect(talentPoolLists(withFamiliar, slot('exemplarArchetypeTalent'))).toEqual(['exemplar', 'common', 'noble'])
+    expect(talentPoolLists(withFamiliar, slot('commonTalent'))).toEqual(['common', 'noble'])
   })
 })
 
@@ -86,7 +100,11 @@ describe('availableTalentIds', () => {
 
 describe('requirementHolds', () => {
   const state = characterState({
+    origin: background(6),
+    firstArchetype: firstArchetype(1),
+    secondArchetype: secondArchetype(8),
     characteristics: new Map([[CHARACTERISTIC.STR, 45]]),
+    skillIncreaseCounts: new Map([[SKILL.MEDICAE, 1]]),
     talentsTaken: new Set([7]),
     abilitiesTaken: new Set([8]),
   })
@@ -97,11 +115,22 @@ describe('requirementHolds', () => {
     ['talent taken', { kind: 'talent', id: 7 }, true],
     ['talent not taken', { kind: 'talent', id: 9 }, false],
     ['ability taken', { kind: 'ability', id: 8 }, true],
+    ['ability not taken', { kind: 'ability', id: 7 }, false],
+    ['skill increased once', { kind: 'skillIncrease', id: SKILL.MEDICAE }, true],
+    ['skill never increased', { kind: 'skillIncrease', id: SKILL.ATHLETICS }, false],
     ['characteristic just met', { kind: 'characteristic', id: CHARACTERISTIC.STR, min: 45 }, true],
     ['characteristic just missed', { kind: 'characteristic', id: CHARACTERISTIC.STR, min: 46 }, false],
     ['characteristic at its base value', { kind: 'characteristic', id: CHARACTERISTIC.AGI, min: 30 }, true],
     ['any of, one holds', { kind: 'anyOf', of: [{ kind: 'talent', id: 9 }, { kind: 'talent', id: 7 }] }, true],
     ['any of, none holds', { kind: 'anyOf', of: [{ kind: 'talent', id: 9 }, { kind: 'level', min: 6 }] }, false],
+    ['first archetype', { kind: 'archetype', tier: 'first', id: 1 }, true],
+    ['another first archetype', { kind: 'archetype', tier: 'first', id: 4 }, false],
+    ['second archetype', { kind: 'archetype', tier: 'second', id: 8 }, true],
+    ['a second archetype ID as a first archetype', { kind: 'archetype', tier: 'first', id: 8 }, false],
+    ['origin', { kind: 'origin', id: 6 }, true],
+    ['another origin', { kind: 'origin', id: 7 }, false],
+    ['none of, none holds', { kind: 'noneOf', of: [{ kind: 'origin', id: 7 }, { kind: 'talent', id: 9 }] }, true],
+    ['none of, one holds', { kind: 'noneOf', of: [{ kind: 'origin', id: 7 }, { kind: 'origin', id: 6 }] }, false],
   ])('%s', (_, requirement, holds) => {
     expect(requirementHolds(requirement, state, slot('commonTalent', 5))).toBe(holds)
   })

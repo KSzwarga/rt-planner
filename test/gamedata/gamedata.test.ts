@@ -6,8 +6,9 @@ import { CHARACTERISTIC, CHARACTERISTICS } from '../../src/gamedata/characterist
 import { DARKEST_HOURS } from '../../src/gamedata/darkestHours'
 import { FIRST_ARCHETYPE, FIRST_ARCHETYPES } from '../../src/gamedata/firstArchetypes'
 import { EXEMPLAR } from '../../src/gamedata/exemplar'
+import { FAMILIAR, FAMILIARS } from '../../src/gamedata/familiars'
 import { HOMEWORLDS } from '../../src/gamedata/homeworlds'
-import { KEYSTONE_FEATURES } from '../../src/gamedata/keystoneFeatures'
+import { KEYSTONE_FEATURES, upgradedUltimate } from '../../src/gamedata/keystoneFeatures'
 import { ORIGIN } from '../../src/gamedata/originIds'
 import { ORIGINS } from '../../src/gamedata/origins'
 import { SECOND_ARCHETYPE, SECOND_ARCHETYPES } from '../../src/gamedata/secondArchetypes'
@@ -23,6 +24,7 @@ import type {
   Requirement,
   TableEntry,
 } from '../../src/gamedata/types'
+import { choiceSlots } from '../../src/model/schema'
 import { choiceSlotBits, isKeystoneFeature } from '../../src/model/slotKinds'
 
 const TABLES: { name: string; entries: readonly TableEntry[]; bits: number }[] = [
@@ -36,6 +38,7 @@ const TABLES: { name: string; entries: readonly TableEntry[]; bits: number }[] =
   { name: 'talents', entries: TALENTS, bits: choiceSlotBits('commonTalent') },
   { name: 'abilities', entries: ABILITIES, bits: choiceSlotBits('firstArchetypeAbility') },
   { name: 'skills', entries: SKILLS, bits: choiceSlotBits('skillIncrease') },
+  { name: 'familiars', entries: FAMILIARS, bits: choiceSlotBits('familiar') },
 ]
 
 describe.each(TABLES)('$name table', ({ entries, bits }) => {
@@ -154,10 +157,11 @@ describe('talent lists', () => {
     expect(new Set(list.talentIds).size).toBe(list.talentIds.length)
   })
 
-  it('exist for every list a homeworld, origin or archetype grants', () => {
+  it('exist for every list a homeworld, origin, archetype or familiar grants', () => {
     const granted = [
       ...[...HOMEWORLDS, ...ORIGINS].flatMap((entry) => entry.grantsTalentLists),
       ...[...FIRST_ARCHETYPES, ...SECOND_ARCHETYPES].map((entry) => entry.archetypeTalentList),
+      ...FAMILIARS.map((entry) => entry.talentList),
     ]
     for (const key of granted) {
       expect(listKeys, key).toContain(key)
@@ -257,6 +261,12 @@ describe('characteristic and skill increases', () => {
       ['WS', 'STR', 'TGH', 'INT'],
       ['Athletics', 'Lore (Imperium)', 'Lore (Xenos)', 'Medicae'],
     ],
+    [
+      'Overseer',
+      SECOND_ARCHETYPE.overseer,
+      ['INT', 'PER', 'FEL'],
+      ['Awareness', 'Carouse', 'Coercion', 'Medicae', 'Tech-Use'],
+    ],
   ])('second archetype %s improves what the wiki lists', (_, id, characteristics, skills) => {
     expect(improvable(CHARACTERISTICS, 'availableForSecondArchetypes', id)).toEqual(characteristics)
     expect(improvable(SKILLS, 'availableForSecondArchetypes', id)).toEqual(skills)
@@ -291,17 +301,218 @@ describe('talent requirements', () => {
     ])
   })
 
+  function abilityNamed(name: string) {
+    const ability = ABILITIES.find((entry) => entry.name === name)
+    if (ability === undefined) throw new Error(`No ability named ${name}`)
+    return ability
+  }
+
+  // Restated from the GameFAQs guide's "Talents (Basic Archetypes)" page.
+  it.each([
+    ['Blade Flurry', 'Break Through'],
+    ['Shearing Strikes', 'Break Through'],
+    ['Reckless Fury', 'Reckless Strike'],
+    ['Invigorating Hatred', 'Sworn Enemy'],
+    ['Inspiring Speech', 'Air of Authority'],
+    ['Prepare for an Assault!', 'Break Their Ranks!'],
+    ['Wounds Are No Excuse!', 'Get Back in the Fight!'],
+    ['Watch Yourself!', 'Move, Move, Move!'],
+    ['Steady!', 'Take Aim!'],
+    ['Terrifying Presence', 'Intimidation'],
+    ['Sniper Expertise', 'Perfect Spot'],
+    ['Informed Hit', 'Precise Attack'],
+    ['Insightful Precision', 'Precise Attack'],
+    ['Improved Tactics', 'Tactical Knowledge'],
+    ['Forewarning', 'Controlled Shot'],
+    ['Tactical Disengage', 'Dash'],
+    ['On the Double', 'Entrench'],
+    ['Unfaltering Fire', 'Rapid Fire'],
+    ['Slip Away', 'Acrobatic Artistry'],
+    ['Promises of Blood', 'Blood Oath'],
+    ['Grand Performance', 'Captive Audience'],
+    ['Blood Bonds', 'Oath of Vengeance'],
+    ['Anticipation', 'Veil of Blades'],
+    // From the guide's "Talents (Advanced Archetypes)" page.
+    ['Morbid Pirouette', 'Danse Macabre'],
+    ['Carmine Whisper', 'Death Whisper'],
+    ['Elusive Speed', 'Elusive Shadow'],
+    ['Gruesome Gust', 'Feinting Attack'],
+    ['Flawless Lunge', 'Poised to Strike'],
+    ['Covering Bulwark', 'Bulwark'],
+    ['Counter-Attack Stance', 'Defensive Stance'],
+    ['Offensive Follow', 'Follow My Lead'],
+    ['On Your Feet!', 'Forced Distraction'],
+    ['Overwhelming Provocation', 'Provocation'],
+    ['Wall of Ferrocrete', 'Wall of Rockcrete'],
+    ['Claim and Maim', 'Claim the Bounty'],
+    ['Flay the Bold', 'Cull the Bold'],
+    ['Trail and Shatter', 'Hot on the Trail'],
+    ['Pierce and Ruin', 'Piercing Shot'],
+    ['Kill Squad', 'Raid'],
+    ['Primary Objective', 'Assign Objective'],
+    ['Perfect Finish', 'Finish the Job'],
+    ['Unwavering Motivation', 'Inspire'],
+    ['Reliance', 'Linchpin'],
+    ['Stronghold', 'Strongpoint'],
+    ['Blurred Locus', 'Combat Locus Stratagem'],
+    ['Inescapable Zone', 'Killzone Stratagem'],
+    ['Daunting Zone', 'Overwhelming Stratagem'],
+    ['Overcoming Zone', 'Stronghold Stratagem'],
+    ['Fortress Zone', 'Trenchline Stratagem'],
+    ['Survivor', 'Cautious Approach'],
+    ['Calm and Steady', 'Confident Approach'],
+    ['Breaking Attack', 'Devastating Attack'],
+    ['Martial Art', 'Kick'],
+    ['All Out', 'Reckless Rush'],
+    ['Flashfire', 'Wildfire'],
+    ['Bleeding Stigmata', 'Exsanguination'],
+    ['Revelling in Suffering', 'Gift of Torment'],
+    ['Death Warrant', 'Merciless Verdict'],
+    ['Everlasting Agony', 'Pain Resonance'],
+    ['Reprieve', 'Reckless Abandon'],
+    ['Unbearable Presence', 'Terrifying Strike'],
+  ])('%s needs the %s ability', (talent, ability) => {
+    expect(talentRequirements(talentNamed(talent).id)).toEqual([{ kind: 'ability', id: abilityNamed(ability).id }])
+  })
+
+  it('Combat Medicae needs the Medicae skill: a Medicae increase or Base Skill: Medicae', () => {
+    expect(talentRequirements(talentNamed('Combat Medicae').id)).toEqual([
+      {
+        kind: 'anyOf',
+        of: [
+          { kind: 'skillIncrease', id: SKILL.MEDICAE },
+          { kind: 'talent', id: talentNamed('Base Skill: Medicae').id },
+        ],
+      },
+    ])
+  })
+
+  it.each([
+    ['Supporting Zone', FIRST_ARCHETYPE.officer],
+    ['Ammunition Bags', FIRST_ARCHETYPE.soldier],
+    ['Joint Hunting', FIRST_ARCHETYPE.warrior],
+    ['Precise Mauling', FIRST_ARCHETYPE.operative],
+    ['Shared Blood', FIRST_ARCHETYPE.bladedancer],
+    ['Special Training', FIRST_ARCHETYPE.officer],
+    ['Energy Multiplier', FIRST_ARCHETYPE.officer],
+    ['Kinetic Module', FIRST_ARCHETYPE.officer],
+  ])('%s needs a first archetype', (talent, archetypeId) => {
+    expect(talentRequirements(talentNamed(talent).id)).toEqual([{ kind: 'archetype', tier: 'first', id: archetypeId }])
+  })
+
+  it.each([
+    'Adamantine Alloys',
+    'Autonomous Protection Algorithms',
+    'Emergency Algorithms',
+    'Mercy of the Omnissiah',
+    'Poison Dispersal System',
+  ])('the Exemplar talent %s needs the Overseer', (talent) => {
+    expect(talentRequirements(talentNamed(talent).id)).toEqual([
+      { kind: 'archetype', tier: 'second', id: SECOND_ARCHETYPE.overseer },
+    ])
+  })
+
+  it.each(['Biomancy', 'Divination', 'Pyromancy', 'Sanctic Powers', 'Telepathy'])(
+    'Psychic Awakening (%s) needs an origin other than a Sanctioned Psyker',
+    (discipline) => {
+      const sanctioned = ORIGINS.filter((origin) => origin.name.startsWith('Sanctioned Psyker'))
+      expect(sanctioned).toHaveLength(5)
+      expect(talentRequirements(talentNamed(`Psychic Awakening (${discipline})`).id)).toEqual([
+        { kind: 'noneOf', of: sanctioned.map((origin) => ({ kind: 'origin', id: origin.id })) },
+      ])
+    },
+  )
+
+  // Restated from the GameFAQs guide's common talents.
+  it.each([
+    ['Bolter Weapon Proficiency', 4],
+    ['Flame Weapon Proficiency', 4],
+    ['Melta Weapon Proficiency', 4],
+    ['Plasma Weapon Proficiency', 4],
+    ['Heavy Weapon Proficiency', 5],
+  ])('%s needs character level %d', (name, level) => {
+    expect(talentRequirements(talentNamed(name).id)).toEqual([{ kind: 'level', min: level }])
+  })
+
+  it.each(['Aeldari', 'Drukhari'])('%s Weapon Proficiency needs level 22 and the Lore (Xenos) skill', (weapon) => {
+    expect(talentRequirements(talentNamed(`${weapon} Weapon Proficiency`).id)).toEqual([
+      { kind: 'level', min: 22 },
+      {
+        kind: 'anyOf',
+        of: [
+          { kind: 'skillIncrease', id: SKILL.LORE_XENOS },
+          { kind: 'talent', id: talentNamed('Base Skill: Lore (Xenos)').id },
+        ],
+      },
+    ])
+  })
+
+  it.each([
+    ['Bolt Weapon Expert', ['Bolter Weapon Proficiency']],
+    ['Flame Weapon Expert', ['Flame Weapon Proficiency']],
+    ['Melta Weapon Expert', ['Melta Weapon Proficiency']],
+    ['Plasma Weapon Expert', ['Plasma Weapon Proficiency']],
+    ['Dual Weapon Specialist', ['Dual-Weapon Combat', 'Weapon Specialist']],
+    ['Deadly Accuracy', ['Aeldari Weapon Proficiency']],
+    ['Poetry of Pain', ['Drukhari Weapon Proficiency']],
+    ['Enhanced Splash Area', ['Plasma Weapon Proficiency']],
+    ['External Power Block', ['Plasma Weapon Proficiency']],
+    ['Piercing Charge', ['Plasma Weapon Proficiency']],
+    ['Plasma Bank', ['Plasma Weapon Proficiency']],
+    ['Safety Training', ['Plasma Weapon Proficiency']],
+  ])('%s needs %s', (name, talents) => {
+    expect(talentRequirements(talentNamed(name).id)).toEqual(
+      talents.map((required) => ({ kind: 'talent', id: talentNamed(required).id })),
+    )
+  })
+
+  it.each(['Breaking Point', 'Overpower'])('%s needs level 15 and Heavy Weapon Proficiency', (name) => {
+    expect(talentRequirements(talentNamed(name).id)).toEqual([
+      { kind: 'level', min: 15 },
+      { kind: 'talent', id: talentNamed('Heavy Weapon Proficiency').id },
+    ])
+  })
+
+  it('Finesse needs the Aeldari or the Drukhari Weapon Proficiency', () => {
+    expect(talentRequirements(talentNamed('Finesse').id)).toEqual([
+      {
+        kind: 'anyOf',
+        of: [
+          { kind: 'talent', id: talentNamed('Aeldari Weapon Proficiency').id },
+          { kind: 'talent', id: talentNamed('Drukhari Weapon Proficiency').id },
+        ],
+      },
+    ])
+  })
+
+  it('Power Armour Proficiency needs 45 Strength', () => {
+    expect(talentRequirements(talentNamed('Power Armour Proficiency').id)).toEqual([
+      { kind: 'characteristic', id: CHARACTERISTIC.STR, min: 45 },
+    ])
+  })
+
   it('is empty for a talent without requirements', () => {
     expect(talentRequirements(talentNamed('Base Skill: Athletics').id)).toEqual([])
   })
 
-  it('only references talents and characteristics that exist', () => {
+  it('only references talents, abilities, characteristics, skills, archetypes and origins that exist', () => {
     const talentIds = new Set(TALENTS.map((talent) => talent.id))
+    const abilityIds = new Set(ABILITIES.map((ability) => ability.id))
     const characteristicIds = new Set(CHARACTERISTICS.map((characteristic) => characteristic.id))
+    const skillIds = new Set(SKILLS.map((skill) => skill.id))
+    const archetypeIds = {
+      first: new Set(FIRST_ARCHETYPES.map((archetype) => archetype.id)),
+      second: new Set(SECOND_ARCHETYPES.map((archetype) => archetype.id)),
+    }
+    const originIds = new Set(ORIGINS.map((origin) => origin.id))
     function check(requirement: Requirement) {
       if (requirement.kind === 'talent') expect(talentIds).toContain(requirement.id)
+      if (requirement.kind === 'ability') expect(abilityIds).toContain(requirement.id)
       if (requirement.kind === 'characteristic') expect(characteristicIds).toContain(requirement.id)
-      if (requirement.kind === 'anyOf') requirement.of.forEach(check)
+      if (requirement.kind === 'skillIncrease') expect(skillIds).toContain(requirement.id)
+      if (requirement.kind === 'archetype') expect(archetypeIds[requirement.tier]).toContain(requirement.id)
+      if (requirement.kind === 'origin') expect(originIds).toContain(requirement.id)
+      if (requirement.kind === 'anyOf' || requirement.kind === 'noneOf') requirement.of.forEach(check)
     }
     for (const [talentId, requirements] of TALENT_REQUIREMENTS) {
       expect(talentIds).toContain(talentId)
@@ -402,10 +613,11 @@ describe('ability lists', () => {
     expect(new Set(list.abilityIds).size).toBe(list.abilityIds.length)
   })
 
-  it('exist for every list a homeworld, origin or archetype grants', () => {
+  it('exist for every list a homeworld, origin, archetype or familiar grants', () => {
     const granted = [
       ...[...HOMEWORLDS, ...ORIGINS].flatMap((entry) => entry.grantsAbilityLists),
       ...[...FIRST_ARCHETYPES, ...SECOND_ARCHETYPES].map((entry) => entry.archetypeAbilityList),
+      ...FAMILIARS.map((entry) => entry.abilityList),
     ]
     for (const key of granted) {
       expect(listKeys, key).toContain(key)
@@ -425,6 +637,7 @@ describe('abbreviations', () => {
     ['talents', TALENTS],
     ['abilities', ABILITIES],
     ['keystone features', Object.values(KEYSTONE_FEATURES)],
+    ['familiars', FAMILIARS],
   ] as const)('every entry of %s has one of 1 to 4 characters', (_, entries) => {
     for (const { name, abbreviation } of entries) {
       expect(abbreviation, name).toMatch(/^\S{1,4}$/)
@@ -439,3 +652,170 @@ describe('archetype icons', () => {
   })
 })
 
+
+describe('overseer', () => {
+  const overseer = SECOND_ARCHETYPES.find((entry) => entry.id === SECOND_ARCHETYPE.overseer)!
+
+  it('is a second archetype of every first archetype', () => {
+    for (const { name, allowedSecondArchetypeIds } of FIRST_ARCHETYPES) {
+      expect(allowedSecondArchetypeIds, name).toContain(overseer.id)
+    }
+  })
+
+  it('picks its familiar in its first choice slot, before anything that depends on it', () => {
+    expect(choiceSlots(overseer.schema)[0]).toEqual({ level: 16, kind: 'familiar' })
+  })
+
+  it('has Overcharge as its ultimate, which depends on the familiar', () => {
+    expect(overseer.schema[19]).toEqual([{ kind: 'keystoneFeature', featureKey: 'overcharge' }])
+    expect(upgradedUltimate('overchargeUpgrade')).toMatchObject({ name: 'Overcharge', dependsOnFamiliar: true })
+  })
+})
+
+describe('familiars', () => {
+  it('has one entry per FAMILIAR ID, in order', () => {
+    expect(FAMILIARS.map((entry) => entry.id)).toEqual(Object.values(FAMILIAR))
+  })
+
+  it('each have their own talent and ability list, and both Overcharge effects', () => {
+    expect(new Set(FAMILIARS.map((entry) => entry.talentList)).size).toBe(FAMILIARS.length)
+    expect(new Set(FAMILIARS.map((entry) => entry.abilityList)).size).toBe(FAMILIARS.length)
+    for (const { name, ultimateHeroicAct, ultimateDesperateMeasures } of FAMILIARS) {
+      expect(ultimateHeroicAct.trim(), name).not.toBe('')
+      expect(ultimateDesperateMeasures.trim(), name).not.toBe('')
+    }
+  })
+})
+
+describe('overseer talent lists', () => {
+  function listNames(key: string): string[] {
+    const list = TALENT_LISTS.find((entry) => entry.key === key)!
+    return list.talentIds.map((id) => TALENTS.find((talent) => talent.id === id)!.name)
+  }
+
+  // Restated from the GameFAQs guide's "Talents (Advanced Archetypes)" page: a talent goes to the
+  // familiar its "<Familiar> Proficiency" prerequisite names, and the rest to the Overseer.
+  it.each([
+    [
+      'overseer',
+      [
+        'Armoured Hide',
+        'Autonomous Medikit',
+        'Brother-in-Arms',
+        'Cohesion',
+        'Dependable Ally',
+        'Enhanced Augmetics',
+        "Master's Patronage",
+        'Rite of Calibration',
+        'Side by Side',
+        'Suppression Factor',
+      ],
+    ],
+    [
+      'cyberEagle',
+      [
+        'Bloody Mark',
+        'Disposition Analysis',
+        "Eagle's Vigilance",
+        'Emergency Protocol',
+        'Sharpened Talons',
+        'Swift Shadow',
+        'Tenacious Talons',
+        'Wind Currents',
+      ],
+    ],
+    [
+      'cyberMastiff',
+      [
+        'Ammunition Bags',
+        'Automatic Protection',
+        'Auto-Medicae',
+        'Battle Mode: Terror',
+        'Chain-Maw',
+        'Joint Hunting',
+        'Perimeter Defence',
+        'Precise Mauling',
+        'Relentless Pursuit',
+        'Shared Blood',
+        'Special Training',
+        'Weakest Link',
+      ],
+    ],
+    [
+      'psyberRaven',
+      [
+        'Bound By Warp',
+        'Castigating Echoes',
+        'Impure Force',
+        'Psy-Resonator',
+        'Ruinous Flows',
+        'Sacrificial Penance',
+        'Warp Buffer',
+      ],
+    ],
+    [
+      'servoSkullSwarm',
+      [
+        'Emergency Stimulation',
+        'Energy Multiplier',
+        'Galvanic Module',
+        'Impure Force (Servo-Skull Swarm)',
+        'Kinetic Module',
+        'Safe Shelter',
+        'Self-Learning Algorithms',
+        'Symbiosis',
+        'Unseen Support',
+      ],
+    ],
+  ])('the %s list has what the guide lists', (key, names) => {
+    expect(listNames(key)).toEqual(names)
+  })
+})
+
+describe('talents added from the guide', () => {
+  function listOf(name: string): string[] {
+    const id = TALENTS.find((talent) => talent.name === name)!.id
+    return TALENT_LISTS.filter((list) => list.talentIds.includes(id)).map((list) => list.key)
+  }
+
+  it.each([
+    ['Arachnoid Drag-Net', 'common'],
+    ['Power Armour Proficiency', 'common'],
+    ['Calculated Resolve', 'common'],
+    ['Lethal Precision', 'exemplar'],
+    ['Metal Shell', 'exemplar'],
+    ['Motive-Force Overload', 'exemplar'],
+    ['Residual Power', 'exemplar'],
+    ['Lifetime of Scars', 'deathWorld'],
+    ['Stentorian Voice', 'navyOfficer'],
+  ])('%s is in the %s list', (name, key) => {
+    expect(listOf(name)).toEqual([key])
+  })
+})
+
+describe('talent and ability icons', () => {
+  // Every file under public/icons/, as `talents/aftershock.webp`.
+  const iconFiles = new Set(
+    Object.keys(import.meta.glob('../../public/icons/*/*')).map((path) => path.replace('../../public/icons/', '')),
+  )
+  const folders = [
+    { folder: 'talents', entries: TALENTS },
+    { folder: 'abilities', entries: ABILITIES },
+  ] as const
+
+  it.each(folders)('every $folder icon is a WebP file in public/icons/$folder', ({ folder, entries }) => {
+    for (const { name, icon } of entries) {
+      if (icon !== undefined) expect(iconFiles.has(`${folder}/${icon}.webp`), name).toBe(true)
+    }
+  })
+
+  it('every file in public/icons is the icon of a talent or an ability', () => {
+    const used = new Set(
+      folders.flatMap(({ folder, entries }) => entries.flatMap((entry) => (entry.icon ? [`${folder}/${entry.icon}.webp`] : []))),
+    )
+    expect(iconFiles.size).toBeGreaterThan(0)
+    for (const file of iconFiles) {
+      expect(used.has(file), file).toBe(true)
+    }
+  })
+})

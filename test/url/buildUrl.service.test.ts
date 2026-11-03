@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest'
 import { encodeBuild } from '../../src/codec/codec'
-import { type BuildPlan, emptyBuildPlan } from '../../src/model/buildPlan'
+import { FAMILIAR } from '../../src/gamedata/familiars'
+import { FIRST_ARCHETYPE, FIRST_ARCHETYPES } from '../../src/gamedata/firstArchetypes'
+import { SECOND_ARCHETYPE, SECOND_ARCHETYPES } from '../../src/gamedata/secondArchetypes'
+import { type BuildPlan, type Choice, emptyBuildPlan } from '../../src/model/buildPlan'
+import { emptyChoices } from '../../src/model/schema'
 import { ARCHETYPE_SCHEMAS, buildFromHash, hashFromBuild } from '../../src/url/buildUrl'
 
 function build(fields: Partial<BuildPlan>): BuildPlan {
@@ -29,6 +33,22 @@ describe('build ⇄ URL hash', () => {
     const hash = hashFromBuild(plan)
     expect(hash).toMatch(/^#[A-Za-z0-9_-]+$/)
     expect(buildFromHash(hash)).toEqual(plan)
+  })
+
+  it("round-trips an Overseer's familiar and Overcharge upgrade", () => {
+    const officer = FIRST_ARCHETYPES.find((entry) => entry.id === FIRST_ARCHETYPE.officer)!
+    const overseer = SECOND_ARCHETYPES.find((entry) => entry.id === SECOND_ARCHETYPE.overseer)!
+    const secondChoices: (Choice | null)[] = emptyChoices(overseer.schema)
+    secondChoices[0] = FAMILIAR.servoSkullSwarm
+    secondChoices[secondChoices.length - 1] = 3 // Level 35: Overcharge upgrade 3.
+    const plan = build({
+      firstArchetypeId: officer.id,
+      firstArchetypeChoicesIds: emptyChoices(officer.schema),
+      secondArchetypeId: overseer.id,
+      secondArchetypeChoicesIds: secondChoices,
+    })
+    expect(buildFromHash(hashFromBuild(plan))).toEqual(plan)
+    expect(warn).not.toHaveBeenCalled()
   })
 
   it('gives an empty build no hash, and reads no hash as an empty build', () => {

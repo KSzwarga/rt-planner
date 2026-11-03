@@ -68,6 +68,7 @@ const tables: ValidatorTables = {
   abilities: [],
   abilityLists: [],
   upgrades: [],
+  familiars: [],
 }
 
 function build(fields: Partial<BuildPlan>): BuildPlan {

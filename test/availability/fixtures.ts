@@ -1,5 +1,11 @@
 import type { CharacterState } from '../../src/availability/characterState'
-import type { BackgroundEntry, FirstArchetypeEntry, IncreaseAvailability, SecondArchetypeEntry } from '../../src/gamedata/types'
+import type {
+  BackgroundEntry,
+  FamiliarEntry,
+  FirstArchetypeEntry,
+  IncreaseAvailability,
+  SecondArchetypeEntry,
+} from '../../src/gamedata/types'
 
 /** A character state with nothing chosen, overridden by `fields`. Unit tests build their input directly. */
 export function characterState(fields: Partial<CharacterState> = {}): CharacterState {
@@ -8,6 +14,7 @@ export function characterState(fields: Partial<CharacterState> = {}): CharacterS
     homeworld: null,
     firstArchetype: null,
     secondArchetype: null,
+    familiar: null,
     characteristics: new Map(),
     characteristicIncreaseCounts: new Map(),
     skillIncreaseCounts: new Map(),
@@ -49,5 +56,18 @@ export function increaseEntry(id: number, fields: Partial<IncreaseAvailability> 
     availableForFirstArchetypes: [],
     availableForSecondArchetypes: [],
     ...fields,
+  }
+}
+
+export function familiar(id: number, list = `familiar${id}`): FamiliarEntry {
+  return {
+    id,
+    name: `Familiar ${id}`,
+    abbreviation: `F${id}`,
+    description: '',
+    talentList: list,
+    abilityList: list,
+    ultimateHeroicAct: '',
+    ultimateDesperateMeasures: '',
   }
 }

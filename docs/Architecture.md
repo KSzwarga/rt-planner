@@ -41,9 +41,10 @@ src/
 │   ├── originIds.ts          ORIGIN ID constants (apart from origins.ts, to avoid an import cycle)
 │   ├── exemplar.ts           The Exemplar's schema (empty for now), talent list and EXEMPLAR display entry
 │   ├── upgrades.ts           The 4 upgrades every ultimate has
+│   ├── familiars.ts          The Overseer's familiars: lists and Overcharge effect, FAMILIAR ID constants
 │   ├── homeworlds.ts         Homeworlds: modifiers, granted talent and ability lists
 │   ├── origins.ts            Origins: same shape as homeworlds
-│   ├── keystoneFeatures.ts   Keystone features by key, and keystoneFeature() for schema slots
+│   ├── keystoneFeatures.ts   Keystone features by key, keystoneFeature() for schema slots, upgradedUltimate()
 │   ├── talents.ts            Talents: id, name, description (generated from the wiki)
 │   ├── talentLists.ts        Talent lists: key, name, talent IDs (generated from the wiki)
 │   ├── talentRequirements.ts Talent requirements by talent ID (hand-written, by talent name)
@@ -62,7 +63,8 @@ src/
 │   ├── increases.ts          characteristicIncrease / skillIncrease: source and the 2 / 4 / 6 cap
 │   ├── talents.ts            Talent slots: pool lists, talentOptions, requirements, no repeats
 │   ├── abilities.ts          Ability slots: pool lists, abilityOptions, no repeats
-│   └── upgrades.ts           Ultimate upgrade slots: IDs 1–4, each once
+│   ├── upgrades.ts           Ultimate upgrade slots: IDs 1–4, each once, a familiar first where needed
+│   └── familiars.ts          Familiar slots: any familiar
 ├── validation/               The validator (§6)
 │   ├── validator.ts          validateBuild, ValidatorTables, GAME_TABLES
 │   ├── replay.ts             The chronological replay: initial state, then every archetype choice in order
@@ -74,6 +76,7 @@ src/
 │   ├── ArchetypeRows.tsx     The first, second and Exemplar rows
 │   ├── ArchetypeIcon.tsx     Each archetype's line icon
 │   ├── archetypeEdits.ts     selectFirstArchetype, selectSecondArchetype, setExemplar, undoesEarlierChoices
+│   ├── entryIcons.ts         entryIconUrl: a talent's or ability's icon, under public/icons/
 │   ├── ConfirmDialog.tsx     Modal yes / no question on the native <dialog>
 │   ├── NestedSelect.tsx      Dropdown over a table, with `Group: Option` entries as nested menus
 │   ├── menuItems.ts          toMenuItems: groups table entries by name for NestedSelect
@@ -241,6 +244,7 @@ The encoder and decoder both walk the schema in a fixed order: levels ascending,
 | `skillIncrease`                                        | Shared skill table                   | 13                   | 4    | Yes      | [Increase tables](./availability-rules.md#increase-tables) |
 | `characteristicIncrease`                               | Shared characteristic table          | 9                    | 4    | Yes      | [Increase tables](./availability-rules.md#increase-tables) |
 | `*Upgrade` (ultimate upgrades, e.g. `firearmMasteryUpgrade`) | Own table per ultimate          | 4                    | 3    | Yes      | [Ultimate upgrades](./availability-rules.md#ultimate-upgrades) |
+| `familiar` (the Overseer's first slot)                 | Familiar table (`FAMILIARS`)         | 4                    | 3    | Yes      | [Familiar](./availability-rules.md#familiar) |
 
 **Keystone features are never encoded.** They are fixed for a given schema and the user cannot change them, so they have no entry in the choices arrays. Anything that shows them, such as the level-up screen, reads them straight from the schema. The Firearm Mastery ultimate is a keystone feature.
 
@@ -252,6 +256,8 @@ Slot kinds fall into two groups:
 - **Own tables**: ultimate upgrades such as `firearmMasteryUpgrade`, and any other kinds still to be defined. Each has a table of its own, so an ID only has meaning within that ultimate. Every ultimate upgrade table has exactly 4 options, so with null they always take 3 bits. Each ultimate's upgrade slot kind, such as `firearmMasteryUpgrade` or `dispatchUpgrade`, is listed by name with its bit width, like every other choice slot kind.
 
 All `*Talent` kinds encode the same way, as a 10-bit talent ID. They differ only in availability.
+
+The Overseer's ultimate depends on its familiar, but its upgrade slots are one kind, `overchargeUpgrade`, like any other ultimate's. Only the meaning of upgrades 1–4 changes with the familiar, not the layout, so the schema still depends on the archetype ID alone.
 
 To add a new slot kind, including a new ultimate's upgrade slot, give it a table and a bit width, add it to its slot-kind type and to `CHOICE_SLOT_KIND_BITS` in `src/model/slotKinds.ts` (used by the encoder, decoder and validator), and define its availability function in [Availability Rules](./availability-rules.md#slot-kinds). Adding one changes the layout, so bump the format version (§4.1).
 

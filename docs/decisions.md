@@ -399,3 +399,99 @@ A chronological log of decisions made during development that affect the archite
 - **Decision:** Each archetype entry, and `EXEMPLAR`, names its icon in an `icon` field (`ArchetypeIconName`), following decision 046's rule that what an entry is shown with is defined in its data. `ArchetypeIcon` draws the named line icon, in the archetype pick screen's emblems and at the centre of the level-up screen's ring. Archetypes no longer have an `abbreviation`. This replaces that part of decision 046, and the abbreviation convention still holds for every other shown table. The Exemplar's starburst follows the mock-up. A data test checks that no two archetypes share an icon.
 - **Consequences:** Operative and Officer, and the other archetypes, are told apart at a glance. Adding an archetype means choosing, or drawing, an icon for it.
 
+
+## 048. Basic archetype talent prerequisites, and the `skillIncrease` requirement
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Only Heavy Armour Proficiency and the Advanced Skill talents had requirements (decision 042). The GameFAQs guide's [Talents (Basic Archetypes)](https://gamefaqs.gamespot.com/ps5/369358-warhammer-40000-rogue-trader/faqs/82192/talents-basic-archetypes) page lists the prerequisites of the Soldier, Warrior, Operative, Officer and Bladedancer talents. Most are one ability. Combat Medicae needs "Medicae Skill or Field Medic", where the Medicae skill means a Medicae skill increase or Base Skill: Medicae, and no requirement kind read skill increases.
+- **Decision:** `talentRequirements.ts` gets the guide's prerequisites, with abilities written by name like talents and resolved against the ability table when the module loads. `Requirement` gains `{ kind: 'skillIncrease'; id }`, which holds once the skill was taken in a `skillIncrease` slot before the slot. Combat Medicae needs `anyOf` a Medicae skill increase or Base Skill: Medicae. Two prerequisites have no entry. Hardened Scars needs Endure, the Warrior's level 3 keystone, and every Warrior talent slot comes after it, so it always holds. Field Medic is missing from the talent table, and a Soldier never has the Warrior list, so leaving it out of Combat Medicae changes nothing for now. A data test restates the guide's list.
+- **Consequences:** These talents show in red until their ability or skill is taken, and the validator nulls them in links and cascades when the ability or skill is removed. Field Medic and Disarm are Warrior talents in the guide but not in the talent table. Field Medic should join Combat Medicae's `anyOf` once it is added, or once talents grant lists. The second archetypes' prerequisites are still missing.
+
+## 049. The Overseer, a familiar slot, and an ultimate that depends on it
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** The Overseer is a second archetype for the Officer and the Operative, from the Lex Imperialis DLC. Its first choice is a familiar, one of four, and the familiar brings its own talents, abilities and version of the ultimate, Overcharge. The codec lays out a build's bits from the archetype's schema alone (Architecture §4.3), so four separate ultimates with their own upgrade slot kinds would make the schema depend on a choice.
+- **Decision:** The Overseer is second archetype 8, with its schema from the wiki's class progression. Level 16 holds a new `familiar` slot kind (3 bits: 4 familiars and null), then the Consolidation and Strategic Adaptation keystones. The familiar table, `FAMILIARS`, holds each familiar's talent list, ability list and Overcharge effects. Familiar lists apply like an archetype list: in the Overseer's own archetype talent and ability slots, and in Exemplar ability slots, but not in common talent slots. `CharacterState` gains `familiar`, set by the replay when it passes the slot. Overcharge is one keystone feature, marked `dependsOnFamiliar`, with one upgrade slot kind, `overchargeUpgrade`. Its upgrades need a familiar picked before them, and they are kept when the familiar is switched, becoming the new familiar's. The UI shows the picked familiar's Overcharge text on the keystone and names it in the upgrades' type. The format version stays at 1: no existing link has a second archetype 8, so no link decodes differently (decision 037).
+- **Consequences:** The codec and the schema rules are unchanged, and adding another familiar is only data. The Overseer's and familiars' talent and ability lists exist but are empty, since the wiki tables they come from leave the Overseer out, so its talent and ability slots offer only the common and build lists for now. The second archetype row has eight entries, so its compact spacing tightens to fit them on one line.
+
+## 050. Advanced archetype prerequisites, and the Overseer's talents
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Decision 048 added the basic archetypes' talent prerequisites. The GameFAQs guide's Talents (Advanced Archetypes) page lists the rest, including the Exemplar's, and the Overseer's talents, which the wiki's talents table leaves out (decision 041), so the Overseer's and familiars' talent lists were empty (decision 049). Some prerequisites are not a talent or an ability: an archetype ("Archetype: Officer"), an origin ("Origin other than Sanctioned Psyker") or a familiar ("Cyber-Mastiff Proficiency").
+- **Decision:** The 51 Overseer talents are appended to the talent table by hand, as IDs 541–591, with the guide's descriptions. A talent whose prerequisite is a familiar's proficiency goes to that familiar's list, and its list is its prerequisite: it is only offered with that familiar. The other Overseer talents go to `overseer`, and the five Exemplar talents that need the Overseer go to `exemplar`. `Requirement` gains `archetype` (the build's first or second archetype), `origin` and `noneOf`. The advanced archetypes' 38 ability prerequisites are added. Counter-Attack Stance and Stronghold need the abilities Defensive Stance and Strongpoint, not the talents of the same name. Supporting Zone and five cyber-mastiff talents need a first archetype. Energy Multiplier needs Bring It Down!, the Officer's keystone feature, so it needs the Officer archetype. The Exemplar's Overseer talents need the Overseer as second archetype. The Psychic Awakening talents need none of the five Sanctioned Psyker origins. Galvanic Module also needs "Manipulus", which the planner has no data for, so that part is left out.
+- **Consequences:** The Overseer's talent slots are filled, and its familiar decides which familiar talents they offer. Ammunition Bags, Joint Hunting and Shared Blood need a Soldier, Warrior or Bladedancer first archetype, which can't be followed by the Overseer, so they are always red for now. They would become pickable if the origin-based routes to the Overseer (Sanctioned Psyker, Arbitrator) are added. Regenerating the talent table from the wiki must keep IDs 541–591. The Overseer's and familiars' ability lists are still empty.
+
+## 051. Every first archetype can be followed by the Overseer
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Decision 049 let only the Officer and the Operative take the Overseer as second archetype, as the wiki's Overseer page lists. So the cyber-mastiff talents that need a Soldier, Warrior or Bladedancer first archetype (decision 050) could never be picked.
+- **Decision:** Every first archetype allows the Overseer. This replaces that part of decision 049. A data test checks that every first archetype lists it.
+- **Consequences:** Ammunition Bags, Joint Hunting and Shared Blood can be picked by a Soldier, Warrior or Bladedancer Overseer with a cyber-mastiff. Switching first archetype never nulls an Overseer, so it never asks for confirmation on its account (decision 040).
+
+## 052. Common talent prerequisites
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** The GameFAQs guide also lists prerequisites for the common talents: character levels, weapon proficiencies and a skill. Its homeworld, origin and Arbitrator talents name their homeworld or origin, which their lists already require.
+- **Decision:** "Character level N" is the existing `level` requirement, since a slot's level is the character level. The Bolter, Flame, Melta and Plasma Weapon Proficiencies need level 4, Heavy Weapon Proficiency level 5, and Breaking Point level 15 and Heavy Weapon Proficiency. The Aeldari and Drukhari Weapon Proficiencies need level 22 and the Lore (Xenos) skill, meaning a Lore (Xenos) skill increase or Base Skill: Lore (Xenos), as in decision 048. Each of the Bolt, Flame, Melta and Plasma Weapon Experts needs its proficiency. Dual Weapon Specialist needs Dual-Weapon Combat and Weapon Specialist, which the guide calls Dual-Weapon Specialist and Melee Weapon Specialist. Homeworld, origin and Arbitrator talents get no requirements: their list already restricts them.
+- **Consequences:** Weapon talents taken too early in a build are shown in red and nulled. The guide has 31 common talents and two homeworld or origin talents that the talent table doesn't have, such as Finesse, the plasma talents, Power Armour Proficiency and the augment talents, so their prerequisites are not added. Breaking Point stays in the `exemplar` list, where the wiki puts it, though the guide lists it as common.
+
+## 053. The guide's missing common, homeworld and origin talents
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Decision 052 left out 33 talents from the GameFAQs guide that the wiki's talents table doesn't have, so their prerequisites couldn't be added.
+- **Decision:** The 33 are appended to the talent table by hand, as IDs 592–624, with the guide's descriptions, like the Overseer's (decision 050). The guide's common section goes to `common`: the webber, arc rifle, shield and plasma talents, Finesse, Deadly Accuracy, Poetry of Pain, Overpower, Power Armour Proficiency and four augment talents. The four augment talents that need the Exemplar (Lethal Precision, Metal Shell, Motive-Force Overload, Residual Power) go to `exemplar`, which already restricts them. Lifetime of Scars goes to `deathWorld` and Stentorian Voice to `navyOfficer`. Finesse needs the Aeldari or the Drukhari Weapon Proficiency. Deadly Accuracy needs the Aeldari proficiency, Poetry of Pain the Drukhari one, and the five plasma talents the Plasma Weapon Proficiency. Overpower needs level 15 and Heavy Weapon Proficiency, and Power Armour Proficiency needs 45 Strength.
+- **Consequences:** Every talent in the guide's common, homeworld and origin sections is in the planner, with its prerequisites. IDs 541–624 are hand-added, and regenerating the talent table from the wiki must keep them, as the comment at the top of `talents.ts` says.
+
+## 054. Talent and ability icons
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Talents and abilities were shown by their abbreviation everywhere (decision 046). The game's own icons, as 48 × 48 WebP images, are being added to `public/icons/`.
+- **Decision:** `TalentEntry` and `AbilityEntry` gain an optional `icon`: the file name, without extension, of a WebP image in `public/icons/talents/` or `public/icons/abilities/`. Files in `public/` are served under the app's base path, so `entryIconUrl` builds the URL from `import.meta.env.BASE_URL`. Where a talent or ability has an icon, it replaces the abbreviation in its circle in the option list, on its ring node once picked, and in the detail panel. The image fills the circle, cropped round, and every `<img>` declares 48 × 48 so nothing moves while it loads. A locked option's icon is greyed and faded under its red frame. Everything else keeps its abbreviation. A data test checks that every `icon` names an existing file and that every file is used. Eight Psyker talents have icons so far.
+- **Consequences:** Adding an icon is a file in `public/icons/` and one `icon` field. Talents and abilities without one look as before. The talent table is partly hand-edited now (decision 050), and a regenerated table must keep the `icon` fields.
+
+## 055. Option list icons are whole squares
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Decision 054 showed talent and ability icons cropped round inside the option list's circles. The icons are square art with their own frame, and in the list they should be shown whole.
+- **Decision:** In the option list, a talent or ability with an icon shows it as the whole 48 × 48 square, with no circle or outline. This replaces that part of decision 054. Options without one keep their abbreviation circle. In a list with any image, each circle is centred in a 48px column, so names stay aligned. A locked option's image is still greyed and faded. Ring nodes and the detail panel keep the icon cropped round inside their circle.
+- **Consequences:** Rows with an image are taller than rows with a circle, 48px against 30px.
+
+## 056. Option list icons are 36px
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** At their full 48 × 48 (decision 055), icons in the option list were too big next to the 30px abbreviation circles.
+- **Decision:** Option list icons are scaled down to 36 × 36, still whole and unframed. In a list with any icon, the circles are centred in a 36px column. The `<img>` keeps its 48 × 48 size attributes, which only set its aspect ratio, so nothing moves while it loads. Ring nodes and the detail panel are unchanged.
+- **Consequences:** Rows with an icon are 36px tall, closer to the 30px rows with a circle.
+
+## 057. Option list icons have a frame
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Unframed icons in the option list (decisions 055 and 056) stood apart from the framed abbreviation circles around them.
+- **Decision:** Each icon in the option list is wrapped in a frame: a 1px outline set 1px off the image, in the accent colour, or the locked red when it can't be picked, matching the circles' borders. The outline takes no layout space, so icons stay 36px and names stay aligned, and its gap is transparent, so it works on highlighted rows. A locked icon's image fades inside its frame, while the frame stays at full strength like a locked circle's border. This replaces the "no frame" part of decision 055.
+- **Consequences:** Icons and circles read as one set in the list.
+
+## 058. Icons in circles leave out their label bar
+
+- **Date:** 2026-11-03
+- **Status:** Accepted
+- **Context:** Each 48 × 48 talent icon has a label bar along its bottom, with the talent's initials. In a circle on the ring or in the detail panel, cropped round (decision 054), the bar showed as a coloured band under the art.
+- **Decision:** In circles, only the art above the bar is shown. In every icon, the bar and its separator line start by row 34, so circles show rows 0–33, the same for every icon: the image is scaled so those 34 rows fill the circle's height, anchored to the top and centred, and the bar and a little of each side fall outside the circle. The numbers are tokens in `index.css` (`--entry-icon-size`, `--entry-icon-art-rows`), and the shared `.entry-icon-art` class is used by the ring nodes and the detail panel. The option list still shows the whole square, bar included (decision 057).
+- **Consequences:** An icon whose art reaches below row 34, such as Unnatural Luck, loses that strip in circles. A new icon with a taller bar would need `--entry-icon-art-rows` lowered.
+
+## 059. Icons have a background margin instead of a label bar
+
+- **Date:** 2026-11-04
+- **Status:** Accepted
+- **Context:** The icon files were redone: the label bar is gone, and the art is smaller and centred on more background, at least 7px from every edge. That makes decision 058's bar crop obsolete.
+- **Decision:** All label bar handling is removed: the `--entry-icon-art-rows` token and the scaled, top-anchored `.entry-icon-art` crop. In circles, on the ring and in the detail panel, the whole image is shown with its background (`.entry-icon-round`). The circle only cuts off background corners, so all of the art shows. In the option list, the background margin is cropped off every side, the same `--entry-icon-margin` of 7px for every icon, so the square shows just the art at 36px, as before, in its frame (decision 057). This replaces decision 058.
+- **Consequences:** Icons need their art at least `--entry-icon-margin` from every edge, or the list crops into it. If new icons have a different margin, the token changes.

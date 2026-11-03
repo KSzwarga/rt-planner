@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { type AbilitySlotRef, abilityOptions, abilityPoolLists, availableAbilityIds } from '../../src/availability/abilities'
 import type { AbilityList } from '../../src/gamedata/types'
-import { characterState, firstArchetype, secondArchetype } from './fixtures'
+import { characterState, familiar, firstArchetype, secondArchetype } from './fixtures'
 
 const lists: AbilityList[] = [
   { key: 'soldier', name: 'Soldier', abilityIds: [1, 2] },
@@ -28,6 +28,22 @@ describe('abilityPoolLists', () => {
 
   it("offers both archetypes' lists in Exemplar slots", () => {
     expect(abilityPoolLists(state, slot('exemplarArchetypeAbility'))).toEqual(['soldier', 'assassin', 'commissar'])
+  })
+
+  it("adds the familiar's list after the second archetype's, in second archetype and Exemplar slots", () => {
+    const withFamiliar = characterState({ ...state, familiar: familiar(1, 'cyberMastiff') })
+    expect(abilityPoolLists(withFamiliar, slot('firstArchetypeAbility'))).toEqual(['soldier', 'commissar'])
+    expect(abilityPoolLists(withFamiliar, slot('secondArchetypeAbility'))).toEqual([
+      'assassin',
+      'cyberMastiff',
+      'commissar',
+    ])
+    expect(abilityPoolLists(withFamiliar, slot('exemplarArchetypeAbility'))).toEqual([
+      'soldier',
+      'assassin',
+      'cyberMastiff',
+      'commissar',
+    ])
   })
 })
 

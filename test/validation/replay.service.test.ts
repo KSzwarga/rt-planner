@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest'
 import { ABILITIES } from '../../src/gamedata/abilities'
 import { CHARACTERISTIC } from '../../src/gamedata/characteristics'
+import { FAMILIAR } from '../../src/gamedata/familiars'
 import { FIRST_ARCHETYPE, FIRST_ARCHETYPES } from '../../src/gamedata/firstArchetypes'
 import { HOMEWORLDS } from '../../src/gamedata/homeworlds'
 import { ORIGIN } from '../../src/gamedata/originIds'
@@ -18,6 +19,8 @@ import { validateBuild } from '../../src/validation/validator'
 const SOLDIER = FIRST_ARCHETYPES.find((entry) => entry.id === FIRST_ARCHETYPE.soldier)!
 const BOUNTY_HUNTER = SECOND_ARCHETYPES.find((entry) => entry.id === SECOND_ARCHETYPE.bountyHunter)!
 const DEATH_WORLD = HOMEWORLDS.find((entry) => entry.name === 'Death World')!
+const OFFICER = FIRST_ARCHETYPES.find((entry) => entry.id === FIRST_ARCHETYPE.officer)!
+const OVERSEER = SECOND_ARCHETYPES.find((entry) => entry.id === SECOND_ARCHETYPE.overseer)!
 
 type Pick = readonly [level: number, kind: ChoiceSlotKind, id: Choice]
 
@@ -45,6 +48,17 @@ function soldier(fields: Partial<BuildPlan>, picks: readonly Pick[]): BuildPlan 
     firstArchetypeId: SOLDIER.id,
     firstArchetypeChoicesIds: choices(SOLDIER.schema, picks),
     ...fields,
+  }
+}
+
+/** A first archetype with no choices, the Officer unless given, then an Overseer with the given picks. */
+function overseer(picks: readonly Pick[], first = OFFICER): BuildPlan {
+  return {
+    ...emptyBuildPlan(),
+    firstArchetypeId: first.id,
+    firstArchetypeChoicesIds: choices(first.schema, []),
+    secondArchetypeId: OVERSEER.id,
+    secondArchetypeChoicesIds: choices(OVERSEER.schema, picks),
   }
 }
 
@@ -203,6 +217,47 @@ describe('validateBuild replays the archetype choices', () => {
       expect(validateBuild(plan)).toEqual(plan)
     })
 
+    it('keeps a talent taken after the ability it needs, and cascades when the ability is removed', () => {
+      const picks: Pick[] = [
+        [6, 'firstArchetypeAbility', ability('Dash')],
+        [8, 'firstArchetypeTalent', talent('Tactical Disengage')],
+      ]
+      expect(validateBuild(soldier({}, picks))).toEqual(soldier({}, picks))
+
+      const withoutDash = soldier({}, [picks[1]])
+      expect(first(validateBuild(withoutDash), 8, 'firstArchetypeTalent')).toBeNull()
+      expect(warn.mock.lastCall?.[0]).toContain('unmet requirements: Dash')
+    })
+
+    it.each<[string, Pick]>([
+      ['a Medicae skill increase', [2, 'skillIncrease', SKILL.MEDICAE]],
+      ['Base Skill: Medicae', [7, 'commonTalent', talent('Base Skill: Medicae')]],
+    ])('keeps Combat Medicae taken after %s', (_, pick) => {
+      const plan = soldier({}, [pick, [8, 'firstArchetypeTalent', talent('Combat Medicae')]])
+      expect(validateBuild(plan)).toEqual(plan)
+    })
+
+    it('nulls Combat Medicae without the Medicae skill', () => {
+      const plan = soldier({}, [
+        [2, 'skillIncrease', SKILL.ATHLETICS],
+        [8, 'firstArchetypeTalent', talent('Combat Medicae')],
+      ])
+      expect(first(validateBuild(plan), 8, 'firstArchetypeTalent')).toBeNull()
+      expect(warn.mock.lastCall?.[0]).toContain(
+        'unmet requirements: one of (Medicae skill increase, Base Skill: Medicae)',
+      )
+    })
+
+    it('nulls a talent taken before the character level it needs', () => {
+      // Heavy Weapon Proficiency needs level 5: a level 4 talent slot is too early, level 5 is just in time.
+      const early = soldier({}, [[4, 'firstArchetypeTalent', talent('Heavy Weapon Proficiency')]])
+      expect(first(validateBuild(early), 4, 'firstArchetypeTalent')).toBeNull()
+      expect(warn.mock.lastCall?.[0]).toContain('unmet requirements: level 5')
+
+      const onTime = soldier({}, [[5, 'firstArchetypeTalent', talent('Heavy Weapon Proficiency')]])
+      expect(validateBuild(onTime)).toEqual(onTime)
+    })
+
     it('nulls a talent taken a second time', () => {
       const plan = soldier({}, [
         [7, 'commonTalent', talent('Base Skill: Athletics')],
@@ -261,6 +316,83 @@ describe('validateBuild replays the archetype choices', () => {
 
       const outOfRange = soldier({}, [[9, 'firearmMasteryUpgrade', 5]])
       expect(first(validateBuild(outOfRange), 9, 'firearmMasteryUpgrade')).toBeNull()
+    })
+  })
+
+  describe("the Overseer's familiar", () => {
+    const second = (plan: BuildPlan, level: number, kind: ChoiceSlotKind) =>
+      choiceAt(OVERSEER.schema, plan.secondArchetypeChoicesIds, level, kind)
+
+    it('keeps a familiar, and Overcharge upgrades taken after it', () => {
+      const plan = overseer([
+        [16, 'familiar', FAMILIAR.cyberMastiff],
+        [27, 'overchargeUpgrade', 2],
+        [35, 'overchargeUpgrade', 4],
+      ])
+      expect(validateBuild(plan)).toEqual(plan)
+    })
+
+    it('nulls Overcharge upgrades when no familiar was picked', () => {
+      const plan = overseer([[27, 'overchargeUpgrade', 2]])
+      expect(second(validateBuild(plan), 27, 'overchargeUpgrade')).toBeNull()
+      expect(warn.mock.lastCall?.[0]).toContain('no familiar picked before it')
+    })
+
+    it("keeps the upgrades when the familiar is switched: they become the new familiar's", () => {
+      const switched = overseer([
+        [16, 'familiar', FAMILIAR.cyberEagle],
+        [27, 'overchargeUpgrade', 2],
+      ])
+      expect(validateBuild(switched)).toEqual(switched)
+    })
+
+    it("keeps a familiar's talent in an Overseer talent slot, and nulls it when the familiar is switched", () => {
+      const picks: Pick[] = [
+        [16, 'familiar', FAMILIAR.cyberEagle],
+        [18, 'secondArchetypeTalent', talent('Sharpened Talons')],
+      ]
+      expect(validateBuild(overseer(picks))).toEqual(overseer(picks))
+
+      const mastiff = validateBuild(overseer([[16, 'familiar', FAMILIAR.cyberMastiff], picks[1]]))
+      expect(second(mastiff, 18, 'secondArchetypeTalent')).toBeNull()
+      expect(warn.mock.lastCall?.[0]).toContain("not in the slot's talent lists")
+    })
+
+    it("nulls a cyber-mastiff talent that needs a first archetype the build doesn't have", () => {
+      // The build's first archetype is the Officer, so Special Training is kept and Precise Mauling isn't.
+      const validated = validateBuild(
+        overseer([
+          [16, 'familiar', FAMILIAR.cyberMastiff],
+          [18, 'secondArchetypeTalent', talent('Special Training')],
+          [21, 'secondArchetypeTalent', talent('Precise Mauling')],
+        ]),
+      )
+      expect(second(validated, 18, 'secondArchetypeTalent')).toBe(talent('Special Training'))
+      expect(second(validated, 21, 'secondArchetypeTalent')).toBeNull()
+      expect(warn.mock.lastCall?.[0]).toContain('unmet requirements: the Operative archetype')
+    })
+
+    it('keeps a cyber-mastiff talent for the first archetype it needs, whichever one that is', () => {
+      // Every first archetype can be followed by the Overseer, so the Soldier's Ammunition Bags can be taken.
+      const plan = overseer(
+        [
+          [16, 'familiar', FAMILIAR.cyberMastiff],
+          [18, 'secondArchetypeTalent', talent('Ammunition Bags')],
+        ],
+        SOLDIER,
+      )
+      expect(validateBuild(plan)).toEqual(plan)
+    })
+
+    it('cascades: an unknown familiar is nulled, and the upgrades after it with it', () => {
+      const validated = validateBuild(
+        overseer([
+          [16, 'familiar', 5],
+          [27, 'overchargeUpgrade', 2],
+        ]),
+      )
+      expect(second(validated, 16, 'familiar')).toBeNull()
+      expect(second(validated, 27, 'overchargeUpgrade')).toBeNull()
     })
   })
 

@@ -46,7 +46,16 @@ test('second archetypes unlock only when the first archetype allows them', async
 })
 
 test('every second archetype is listed, in table order', async ({ page }) => {
-  const names = ['Assassin', 'Vanguard', 'Bounty Hunter', 'Master Tactician', 'Grand Strategist', 'Arch-Militant', 'Executioner']
+  const names = [
+    'Assassin',
+    'Vanguard',
+    'Bounty Hunter',
+    'Master Tactician',
+    'Grand Strategist',
+    'Arch-Militant',
+    'Executioner',
+    'Overseer',
+  ]
   const buttons = page.getByRole('group', { name: 'Second archetype' }).getByRole('button')
   await expect(buttons).toHaveCount(names.length)
   for (const [index, name] of names.entries()) {

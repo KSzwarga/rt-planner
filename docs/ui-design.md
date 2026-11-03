@@ -69,7 +69,8 @@ Three stacked rows, one per archetype tier:
   | Officer          | Crown                 | Master Tactician | Star               |
   | Bladedancer      | Two crossed blades    | Grand Strategist | Rook (chess piece) |
   | Exemplar         | Starburst             | Arch-Militant    | Sword and gun crossed |
-  |                  |                       | Executioner      | Axe                | On narrow screens (≤ 640px), each row wraps.
+  |                  |                       | Executioner      | Axe                |
+  |                  |                       | Overseer         | Eye                | On narrow screens (≤ 640px), each row wraps.
 
 ## Level-up screen
 
@@ -101,11 +102,13 @@ For talent and ability slots, options are **grouped by the list they come from**
 
 Only lists in the slot's [pool](./availability-rules.md#rule-1-pool-which-talents-are-shown) are shown. A talent that is in more than one of those lists appears in each group. Picking either one picks the same talent.
 
+Each option has its icon on the left of its name. A talent or ability with an `icon` shows just its art in a 36 × 36 square: the image's background margin is cropped off. The square is framed by a thin line set 1px off it: the accent colour like the circles' borders, or red when it can't be picked. Every other option shows its abbreviation in a circle. In a list with any image, the circles are centred in a 36px column, so every name starts at the same place. Icons are 48 × 48 WebP files in `public/icons/talents/` and `public/icons/abilities/`, named by the entry's `icon` field, with the art centred on its background and at least 7px from every edge (`--entry-icon-margin` in `index.css`) ([decision 054](./decisions.md#054-talent-and-ability-icons)).
+
 Options that can't be picked yet are shown **in red** ([UI: shown vs. selectable](./availability-rules.md#ui-shown-vs-selectable)). The current choice is highlighted.
 
 ### 3. Detail panel
 
-Shows the option under the cursor or currently selected: icon, name, type, and description. If it has unmet requirements, a red **Requirements** box lists each one.
+Shows the option under the cursor or currently selected: icon, name, type, and description. The icon is the talent's or ability's image when it has one, and its abbreviation otherwise. In the circle, the whole image shows, background included, as on the ring. If it has unmet requirements, a red **Requirements** box lists each one.
 
 ### Behaviour
 
@@ -114,7 +117,9 @@ Shows the option under the cursor or currently selected: icon, name, type, and d
 - **Every pick revalidates the build.** Picking goes through the validator, so a later choice that no longer holds is nulled, and the nulling cascades forward.
 - **Talent and ability slots** show every talent from every list in the slot's pool, one group per list, in the order above. Talents whose requirements aren't met, or that were taken earlier, are shown in red: a red icon, as in the mock-up.
 - **Characteristic and skill slots** show what the archetype, origin, homeworld or an earlier talent unlocks. An entry that has reached the 2 / 4 / 6 cap is shown in red. Entries nothing unlocks aren't shown.
-- **Ultimate upgrade slots** show the 4 upgrades, with those taken earlier in red.
+- **Ultimate upgrade slots** show the 4 upgrades, with those taken earlier in red. For an ultimate that depends on the familiar, such as Overcharge, all 4 are red with "Requires a familiar" until one is picked, and once it is, their type reads "Ultimate upgrade · Overcharge (Cyber-Eagle)".
+- **Familiar slots** show the 4 familiars, all pickable.
+- **An ultimate that depends on the familiar**, opened on the ring, shows the picked familiar's Heroic Act and Desperate Measures effects, and its type names the familiar. With no familiar, it says to pick one.
 - Red options can still be pointed at or focused, so the detail panel can show why they can't be picked. Clicking one does nothing.
 - **Clicking the current option clears it.**
 - **Empty nodes** are gray, with a faint icon for their kind (`SlotIcon`):
@@ -127,7 +132,8 @@ Shows the option under the cursor or currently selected: icon, name, type, and d
   | Skill increase                         | Book                     |
   | Characteristic increase                | Flexed arm               |
   | Ability                                | No icon yet: "ABL"       |
+  | Familiar                               | Paw print                |
 
-- **Filled nodes** show their choice's abbreviation, in their slot's colour (`--slot-*` in `index.css`): keystone feature amber, ability orange, ultimate upgrade gold, talent blue, common talent purple, skill green, characteristic increase red. A level has up to three slots, on up to three rings, at the same angle.
+- **Filled nodes** show their choice's icon when it is a talent or ability with one, inside the node's coloured ring: the whole image, background included, so all of the art shows (`.entry-icon-round`). and its abbreviation otherwise, in their slot's colour (`--slot-*` in `index.css`): keystone feature amber, ability orange, ultimate upgrade gold, talent blue, common talent purple, skill green, characteristic increase red, familiar teal. A level has up to three slots, on up to three rings, at the same angle.
 - **The open slot's level** is shown under the archetype's name.
 - On screens ≤ 1100px wide the ring sits above the two panels. On screens ≤ 640px, everything stacks and Return moves to the top.
