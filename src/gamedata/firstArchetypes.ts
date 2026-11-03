@@ -23,6 +23,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
       SECOND_ARCHETYPE.bountyHunter,
       SECOND_ARCHETYPE.masterTactician,
       SECOND_ARCHETYPE.archMilitant,
+      SECOND_ARCHETYPE.overseer,
     ],
     schema: {
       1: [keystoneFeature('runAndGun')],
@@ -53,6 +54,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
       SECOND_ARCHETYPE.vanguard,
       SECOND_ARCHETYPE.archMilitant,
       SECOND_ARCHETYPE.executioner,
+      SECOND_ARCHETYPE.overseer,
     ],
     schema: {
       1: [keystoneFeature('charge')],
@@ -83,6 +85,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
       SECOND_ARCHETYPE.bountyHunter,
       SECOND_ARCHETYPE.grandStrategist,
       SECOND_ARCHETYPE.executioner,
+      SECOND_ARCHETYPE.overseer,
     ],
     schema: {
       1: [keystoneFeature('analyseEnemies')],
@@ -112,6 +115,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
       SECOND_ARCHETYPE.vanguard,
       SECOND_ARCHETYPE.masterTactician,
       SECOND_ARCHETYPE.grandStrategist,
+      SECOND_ARCHETYPE.overseer,
     ],
     schema: {
       1: [keystoneFeature('voiceOfCommand')],
@@ -142,6 +146,7 @@ export const FIRST_ARCHETYPES: readonly FirstArchetypeEntry[] = [
       SECOND_ARCHETYPE.masterTactician,
       SECOND_ARCHETYPE.archMilitant,
       SECOND_ARCHETYPE.executioner,
+      SECOND_ARCHETYPE.overseer,
     ],
     schema: {
       1: [keystoneFeature('bladeDance')],

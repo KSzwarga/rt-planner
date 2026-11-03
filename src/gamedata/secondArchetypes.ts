@@ -10,6 +10,7 @@ export const SECOND_ARCHETYPE = {
   grandStrategist: 5,
   archMilitant: 6,
   executioner: 7,
+  overseer: 8,
 } as const
 
 /** Second archetypes cover levels 16–35. Level 20 also grants an additional AP, a fixed keystone feature. */
@@ -215,6 +216,37 @@ export const SECOND_ARCHETYPES: readonly SecondArchetypeEntry[] = [
       33: ['secondArchetypeTalent'],
       34: ['characteristicIncrease', 'commonTalent'],
       35: ['carnivalOfMiseryUpgrade'],
+    },
+  },
+  {
+    id: SECOND_ARCHETYPE.overseer,
+    name: 'Overseer',
+    icon: 'eye',
+    archetypeTalentList: 'overseer',
+    archetypeAbilityList: 'overseer',
+    // From the wiki's Overseer class progression, ranks 1–20. The familiar is picked first: every
+    // later slot reads it, and Overcharge's effect and upgrades are the familiar's.
+    schema: {
+      16: ['familiar', keystoneFeature('consolidation'), keystoneFeature('strategicAdaptation')],
+      17: ['secondArchetypeAbility'],
+      18: ['secondArchetypeTalent'],
+      19: [keystoneFeature('overcharge')],
+      20: [keystoneFeature('additionalActionPoint'), 'characteristicIncrease'],
+      21: ['secondArchetypeTalent', 'characteristicIncrease'],
+      22: ['secondArchetypeAbility', 'skillIncrease'],
+      23: ['secondArchetypeTalent'],
+      24: ['characteristicIncrease', 'commonTalent'],
+      25: ['secondArchetypeTalent'],
+      26: ['characteristicIncrease', 'skillIncrease'],
+      27: ['overchargeUpgrade'],
+      28: ['secondArchetypeTalent', 'commonTalent'],
+      29: ['characteristicIncrease', 'skillIncrease'],
+      30: ['secondArchetypeAbility'],
+      31: ['secondArchetypeTalent', 'commonTalent'],
+      32: ['characteristicIncrease', 'skillIncrease'],
+      33: ['secondArchetypeTalent'],
+      34: ['commonTalent'],
+      35: ['overchargeUpgrade'],
     },
   },
 ]

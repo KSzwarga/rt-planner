@@ -1,9 +1,12 @@
+import { ENTRY_ICON_SIZE } from '../entryIcons'
 import './DetailPanel.css'
 
 /** What the detail panel shows: an option, or a keystone feature. */
 export interface DetailView {
   readonly name: string
   readonly abbreviation: string
+  /** Shown instead of the abbreviation when there is one. */
+  readonly iconUrl: string | null
   readonly typeLabel: string
   readonly description: string
   /** Unmet requirements and other reasons it can't be picked. Shown in the red box. */
@@ -29,7 +32,17 @@ export function DetailPanel({ detail }: DetailPanelProps) {
     <section className="detail" aria-label="Details">
       <header className="detail__header">
         <span className={detail.isLocked ? 'detail__icon detail__icon--locked' : 'detail__icon'} aria-hidden="true">
-          {detail.abbreviation}
+          {detail.iconUrl ? (
+            <img
+              className="entry-icon-round detail__image"
+              src={detail.iconUrl}
+              alt=""
+              width={ENTRY_ICON_SIZE}
+              height={ENTRY_ICON_SIZE}
+            />
+          ) : (
+            detail.abbreviation
+          )}
         </span>
         <div>
           <h2 className="detail__name">{detail.name}</h2>

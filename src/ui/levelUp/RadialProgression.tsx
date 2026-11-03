@@ -7,7 +7,8 @@ import { isKeystoneFeature } from '../../model/slotKinds'
 import { nodePosition, RING_RADII, type RadialNode, radialLayout } from './radialLayout'
 import { ArchetypeIcon } from '../ArchetypeIcon'
 import { SlotIcon } from './SlotIcon'
-import { choiceEntry, type SlotCategory, slotCategory, slotTitle } from './slotView'
+import { ENTRY_ICON_SIZE } from '../entryIcons'
+import { choiceEntry, choiceIconUrl, type SlotCategory, slotCategory, slotTitle } from './slotView'
 import './RadialProgression.css'
 
 /** Which node is open: a choice slot by its index, or a keystone feature by its level and ring. */
@@ -117,9 +118,14 @@ function RadialNodeButton({ node, choice, isSelected, onSelect }: RadialNodeButt
     accessibleName = `Level ${node.level} ${slotTitle(node.slot)}: empty`
   } else {
     const entry = choiceEntry(node.slot, choice)
+    const iconUrl = choiceIconUrl(node.slot, choice)
     category = slotCategory(node.slot)
     classNames.push('radial-node--filled')
-    label = entry.abbreviation
+    label = iconUrl ? (
+      <img className="entry-icon-round" src={iconUrl} alt="" width={ENTRY_ICON_SIZE} height={ENTRY_ICON_SIZE} />
+    ) : (
+      entry.abbreviation
+    )
     accessibleName = `Level ${node.level} ${slotTitle(node.slot)}: ${entry.name}`
   }
 

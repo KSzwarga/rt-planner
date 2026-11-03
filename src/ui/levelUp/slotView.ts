@@ -1,21 +1,24 @@
 import { abilityOptions } from '../../availability/abilities'
 import type { ArchetypeTier, CharacterState } from '../../availability/characterState'
 import { characteristicValue, INCREASE_AMOUNT } from '../../availability/characterState'
+import { availableFamiliarIds } from '../../availability/familiars'
 import { hasIncreaseSource, INCREASE_CAPS } from '../../availability/increases'
 import { requirementText } from '../../availability/requirementText'
 import { talentOptions } from '../../availability/talents'
-import { KEYSTONE_FEATURES } from '../../gamedata/keystoneFeatures'
-import type { AbbreviatedEntry, ListKey } from '../../gamedata/types'
+import { upgradeNeedsFamiliar } from '../../availability/upgrades'
+import { upgradedUltimate } from '../../gamedata/keystoneFeatures'
+import type { AbbreviatedEntry, FamiliarEntry, ListKey } from '../../gamedata/types'
 import type { BuildPlan, Choice, Id } from '../../model/buildPlan'
 import { choiceSlots, type Schema } from '../../model/schema'
 import {
   type ChoiceSlotKind,
   isAbilitySlotKind,
+  isFamiliarSlotKind,
   isTalentSlotKind,
   isUpgradeSlotKind,
-  type UpgradeSlotKind,
 } from '../../model/slotKinds'
 import { CHOICES_FIELD, stateBeforeSlot, talentRuleTables } from '../../validation/replay'
+import { entryIconUrl } from '../entryIcons'
 import { GAME_TABLES, type ValidatorTables } from '../../validation/validator'
 
 /** One option of a slot, as the option list and the detail panel show it. */
@@ -23,6 +26,8 @@ export interface OptionView {
   readonly id: Id
   readonly name: string
   readonly abbreviation: string
+  /** Its icon, shown instead of the abbreviation. Null when it has none: only talents and abilities can. */
+  readonly iconUrl: string | null
   /** What the option is and where it comes from, e.g. "Talent · Soldier, Common". */
   readonly typeLabel: string
   readonly description: string
@@ -53,16 +58,25 @@ const SLOT_TITLES: Record<string, string> = {
   commonTalent: 'Common talents',
   characteristicIncrease: 'Characteristic increase',
   skillIncrease: 'Skill increase',
+  familiar: 'Familiar',
 }
 
 /**
  * How a choice slot looks on the ring: its icon when empty and its colour when filled. Archetype
  * talent slots of every tier look alike, and so do all ultimate upgrade slots.
  */
-export type SlotCategory = 'talent' | 'commonTalent' | 'ability' | 'upgrade' | 'skill' | 'characteristic'
+export type SlotCategory =
+  | 'talent'
+  | 'commonTalent'
+  | 'ability'
+  | 'upgrade'
+  | 'skill'
+  | 'characteristic'
+  | 'familiar'
 
 export function slotCategory(kind: ChoiceSlotKind): SlotCategory {
   if (kind === 'commonTalent') return 'commonTalent'
+  if (isFamiliarSlotKind(kind)) return 'familiar'
   if (isTalentSlotKind(kind)) return 'talent'
   if (isAbilitySlotKind(kind)) return 'ability'
   if (isUpgradeSlotKind(kind)) return 'upgrade'
@@ -114,7 +128,36 @@ export function optionTable(kind: ChoiceSlotKind, tables: ValidatorTables = GAME
   if (isTalentSlotKind(kind)) return tables.talents
   if (isAbilitySlotKind(kind)) return tables.abilities
   if (isUpgradeSlotKind(kind)) return tables.upgrades
+  if (isFamiliarSlotKind(kind)) return tables.familiars
   return kind === 'characteristicIncrease' ? tables.characteristics : tables.skills
+}
+
+/**
+ * The familiar a validated build picked, if any: the choice in its `familiar` slot. Shown wherever
+ * something depends on it, such as the Overcharge keystone.
+ */
+export function buildFamiliar(plan: BuildPlan, tables: ValidatorTables = GAME_TABLES): FamiliarEntry | null {
+  for (const tier of ['first', 'second', 'exemplar'] as const) {
+    const schema = tierSchema(plan, tier, tables)
+    if (schema === null) continue
+    const index = choiceSlots(schema).findIndex((slot) => isFamiliarSlotKind(slot.kind))
+    const id = index === -1 ? null : (plan[CHOICES_FIELD[tier]][index] ?? null)
+    if (id !== null) return tables.familiars.find((entry) => entry.id === id) ?? null
+  }
+  return null
+}
+
+/** The icon of the entry a choice picks, for its node on the ring. Null when it has none. */
+export function choiceIconUrl(kind: ChoiceSlotKind, id: Choice, tables: ValidatorTables = GAME_TABLES): string | null {
+  if (isTalentSlotKind(kind)) {
+    const icon = tables.talents.find((entry) => entry.id === id)?.icon
+    return icon ? entryIconUrl('talents', icon) : null
+  }
+  if (isAbilitySlotKind(kind)) {
+    const icon = tables.abilities.find((entry) => entry.id === id)?.icon
+    return icon ? entryIconUrl('abilities', icon) : null
+  }
+  return null
 }
 
 /** The entry a choice picks, for its node on the ring. */
@@ -138,6 +181,7 @@ function optionGroups(
         id: option.id,
         name: talent?.name ?? `#${option.id}`,
         abbreviation: talent?.abbreviation ?? '?',
+        iconUrl: talent?.icon ? entryIconUrl('talents', talent.icon) : null,
         typeLabel: `Talent · ${option.lists.map(listName).join(', ')}`,
         description: talent?.description ?? '',
         selectable: option.selectable,
@@ -159,6 +203,7 @@ function optionGroups(
         id: option.id,
         name: ability?.name ?? `#${option.id}`,
         abbreviation: ability?.abbreviation ?? '?',
+        iconUrl: ability?.icon ? entryIconUrl('abilities', ability.icon) : null,
         typeLabel: `Ability · ${option.lists.map(listName).join(', ')}`,
         description: ability?.description ?? '',
         selectable: option.selectable,
@@ -170,17 +215,47 @@ function optionGroups(
 
   if (isUpgradeSlotKind(kind)) {
     const taken = state.upgradesTaken.get(kind)
-    const options = tables.upgrades.map((upgrade) => ({
-      id: upgrade.id,
-      name: upgrade.name,
-      abbreviation: upgrade.abbreviation,
-      typeLabel: `Ultimate upgrade · ${ultimateName(kind)}`,
-      description: '',
-      selectable: !taken?.has(upgrade.id),
-      problems: taken?.has(upgrade.id) ? ['Already taken'] : [],
-      isCurrent: upgrade.id === currentId,
-    }))
+    const needsFamiliar = upgradeNeedsFamiliar(state, kind)
+    const ultimate = upgradedUltimate(kind)
+    // An ultimate that depends on the familiar is named with it: "Overcharge (Cyber-Mastiff)".
+    const ultimateName =
+      ultimate?.dependsOnFamiliar && state.familiar
+        ? `${ultimate.name} (${state.familiar.name})`
+        : (ultimate?.name ?? 'Ultimate')
+    const options = tables.upgrades.map((upgrade) => {
+      const problems = [
+        ...(needsFamiliar ? ['Requires a familiar'] : []),
+        ...(taken?.has(upgrade.id) ? ['Already taken'] : []),
+      ]
+      return {
+        id: upgrade.id,
+        name: upgrade.name,
+        abbreviation: upgrade.abbreviation,
+        iconUrl: null,
+        typeLabel: `Ultimate upgrade · ${ultimateName}`,
+        description: '',
+        selectable: problems.length === 0,
+        problems,
+        isCurrent: upgrade.id === currentId,
+      }
+    })
     return [{ key: kind, name: 'Upgrades', options }]
+  }
+
+  if (isFamiliarSlotKind(kind)) {
+    const available = availableFamiliarIds(tables.familiars)
+    const options = tables.familiars.map((familiar) => ({
+      id: familiar.id,
+      name: familiar.name,
+      abbreviation: familiar.abbreviation,
+      iconUrl: null,
+      typeLabel: 'Familiar',
+      description: familiar.description,
+      selectable: available.includes(familiar.id),
+      problems: [],
+      isCurrent: familiar.id === currentId,
+    }))
+    return [{ key: kind, name: 'Familiars', options }]
   }
 
   const isCharacteristic = kind === 'characteristicIncrease'
@@ -197,6 +272,7 @@ function optionGroups(
         id: entry.id,
         name: entry.name,
         abbreviation: entry.abbreviation,
+        iconUrl: null,
         typeLabel: isCharacteristic ? 'Characteristic increase' : 'Skill increase',
         description: isCharacteristic
           ? `${entry.name}: ${value} → ${value + INCREASE_AMOUNT}. Taken ${count} of ${cap} times so far.`
@@ -223,10 +299,4 @@ function groupByList<T extends { readonly lists: readonly ListKey[] }>(
     }
   }
   return [...groups].map(([key, groupOptions]) => ({ key, name: listName(key), options: groupOptions }))
-}
-
-/** The name of the ultimate an upgrade slot upgrades: `firearmMasteryUpgrade` upgrades Firearm Mastery. */
-function ultimateName(kind: UpgradeSlotKind): string {
-  const featureKey = kind.replace(/Upgrade$/, '') as keyof typeof KEYSTONE_FEATURES
-  return KEYSTONE_FEATURES[featureKey]?.name ?? 'Ultimate'
 }

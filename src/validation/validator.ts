@@ -6,6 +6,7 @@ import { ABILITY_LISTS } from '../gamedata/abilityLists'
 import { CHARACTERISTICS } from '../gamedata/characteristics'
 import { DARKEST_HOURS } from '../gamedata/darkestHours'
 import { EXEMPLAR_SCHEMA } from '../gamedata/exemplar'
+import { FAMILIARS } from '../gamedata/familiars'
 import { FIRST_ARCHETYPES } from '../gamedata/firstArchetypes'
 import { HOMEWORLDS } from '../gamedata/homeworlds'
 import { ORIGINS } from '../gamedata/origins'
@@ -22,6 +23,7 @@ import type {
   AbilityList,
   CharacteristicEntry,
   DarkestHourEntry,
+  FamiliarEntry,
   FirstArchetypeEntry,
   HomeworldEntry,
   OriginEntry,
@@ -56,6 +58,7 @@ export interface ValidatorTables {
   readonly abilities: readonly AbilityEntry[]
   readonly abilityLists: readonly AbilityList[]
   readonly upgrades: readonly UpgradeEntry[]
+  readonly familiars: readonly FamiliarEntry[]
 }
 
 export const GAME_TABLES: ValidatorTables = {
@@ -75,6 +78,7 @@ export const GAME_TABLES: ValidatorTables = {
   abilities: ABILITIES,
   abilityLists: ABILITY_LISTS,
   upgrades: UPGRADES,
+  familiars: FAMILIARS,
 }
 
 /**

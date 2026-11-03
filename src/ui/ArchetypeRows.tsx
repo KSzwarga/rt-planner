@@ -113,7 +113,7 @@ interface ArchetypeRowProps {
   readonly label: string
   /** A row is drawn locked (red) when none of its archetypes can be picked. */
   readonly isLocked: boolean
-  /** Tighter spacing, so the seven second archetypes fit on one line, as in the mock-up. */
+  /** Tighter spacing, so the eight second archetypes fit on one line, as in the mock-up. */
   readonly isCompact?: boolean
   readonly isExemplar?: boolean
   readonly children: ReactNode

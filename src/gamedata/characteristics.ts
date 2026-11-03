@@ -131,6 +131,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
       SECOND_ARCHETYPE.assassin,
       SECOND_ARCHETYPE.grandStrategist,
       SECOND_ARCHETYPE.executioner,
+      SECOND_ARCHETYPE.overseer,
     ],
   },
   {
@@ -145,6 +146,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
       SECOND_ARCHETYPE.assassin,
       SECOND_ARCHETYPE.bountyHunter,
       SECOND_ARCHETYPE.grandStrategist,
+      SECOND_ARCHETYPE.overseer,
     ],
   },
   {
@@ -188,6 +190,7 @@ export const CHARACTERISTICS: readonly CharacteristicEntry[] = [
       SECOND_ARCHETYPE.vanguard,
       SECOND_ARCHETYPE.masterTactician,
       SECOND_ARCHETYPE.grandStrategist,
+      SECOND_ARCHETYPE.overseer,
     ],
   },
 ]

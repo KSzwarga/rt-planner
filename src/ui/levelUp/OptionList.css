@@ -123,3 +123,48 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/*
+ * A talent or ability icon, as just its art: the image's background margin (--entry-icon-margin on
+ * every side) is cropped off, and the art fills the 36px square. Its frame is a 1px line set 1px off
+ * the square, coloured like the circles' borders: the accent, or red when locked. An outline takes
+ * no layout space, so icons stay 36px and aligned. A locked icon also fades, while its frame stays at
+ * full strength.
+ */
+.option__frame {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 2px;
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+
+  .option--locked & {
+    outline-color: var(--locked-line-strong);
+  }
+}
+
+.option__image {
+  --art-scale: calc(var(--entry-icon-size) / (var(--entry-icon-size) - 2 * var(--entry-icon-margin)));
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% * var(--art-scale));
+  height: calc(100% * var(--art-scale));
+  max-width: none;
+  transform: translate(-50%, -50%);
+
+  .option--locked & {
+    filter: grayscale(1);
+    opacity: 0.45;
+  }
+}
+
+/* In a list with icons, each abbreviation circle sits centred in a column as wide as an icon. */
+.option-list--with-images .option__icon {
+  margin-inline: 3px;
+}

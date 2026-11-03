@@ -34,6 +34,14 @@
   color: var(--accent);
 }
 
+/* A talent or ability icon fills the circle (.entry-icon-round). A locked one fades, under the red frame. */
+.detail__image {
+  .detail__icon--locked & {
+    filter: grayscale(1);
+    opacity: 0.45;
+  }
+}
+
 .detail__icon--locked {
   border-color: var(--locked-line-strong);
   background: var(--locked-emblem-bg);
@@ -59,6 +67,8 @@
 
 .detail__description {
   margin: 20px 0;
+  /* Descriptions with several parts, such as an ultimate's Heroic Act and Desperate Measures, break lines. */
+  white-space: pre-line;
   color: var(--text);
   font-size: 15px;
   line-height: 1.45;

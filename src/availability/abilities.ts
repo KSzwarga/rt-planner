@@ -16,15 +16,18 @@ export interface AbilityOption {
 }
 
 /**
- * The lists in an ability slot's pool: the owning archetype's ability list, then the lists the
- * origin, homeworld and talents grant. There is no common ability list. The Exemplar has no
- * abilities of its own, so its ability slots offer both of its archetypes' lists.
+ * The lists in an ability slot's pool: the owning archetype's ability lists (its own list, then its
+ * familiar's), then the lists the origin, homeworld and talents grant. There is no common ability
+ * list. The Exemplar has no abilities of its own, so its ability slots offer both of its archetypes'
+ * lists, the second's familiar included.
  */
 export function abilityPoolLists(state: CharacterState, slot: AbilitySlotRef): ListKey[] {
+  const first = [state.firstArchetype?.archetypeAbilityList]
+  const second = [state.secondArchetype?.archetypeAbilityList, state.familiar?.abilityList]
   const archetypeLists = {
-    firstArchetypeAbility: [state.firstArchetype?.archetypeAbilityList],
-    secondArchetypeAbility: [state.secondArchetype?.archetypeAbilityList],
-    exemplarArchetypeAbility: [state.firstArchetype?.archetypeAbilityList, state.secondArchetype?.archetypeAbilityList],
+    firstArchetypeAbility: first,
+    secondArchetypeAbility: second,
+    exemplarArchetypeAbility: [...first, ...second],
   }[slot.kind].filter((key) => key !== undefined)
   return [...new Set([...archetypeLists, ...state.abilityLists])]
 }

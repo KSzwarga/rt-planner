@@ -50,6 +50,12 @@ const PATHS: Record<ArchetypeIconName, readonly string[]> = {
     'M12 11.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6z',
   ],
   sparkle: ['M12 3v5M12 16v5M3 12h5M16 12h5', 'M5.6 5.6l3 3M15.4 15.4l3 3M18.4 5.6l-3 3M8.6 15.4l-3 3'],
+  // A watching eye: an almond with a ringed pupil.
+  eye: [
+    'M2.5 12c2.4-4.2 5.6-6.3 9.5-6.3s7.1 2.1 9.5 6.3c-2.4 4.2-5.6 6.3-9.5 6.3S4.9 16.2 2.5 12z',
+    'M12 8.6a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z',
+    'M12 11.1a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8z',
+  ],
 }
 
 /** An archetype's line icon (UI Design: Archetype rows). It takes the text colour. */

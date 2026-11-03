@@ -1,4 +1,5 @@
 import type {
+  FamiliarEntry,
   FirstArchetypeEntry,
   HomeworldEntry,
   ListKey,
@@ -27,6 +28,8 @@ export interface CharacterState {
   readonly homeworld: HomeworldEntry | null
   readonly firstArchetype: FirstArchetypeEntry | null
   readonly secondArchetype: SecondArchetypeEntry | null
+  /** The Overseer's familiar, once its `familiar` slot is passed. */
+  readonly familiar: FamiliarEntry | null
   /** Current value of each characteristic, by ID (see `CHARACTERISTIC_BASE_VALUE`). */
   readonly characteristics: ReadonlyMap<Id, number>
   /** Times each characteristic was taken in `characteristicIncrease` slots. Starting increases don't count. */

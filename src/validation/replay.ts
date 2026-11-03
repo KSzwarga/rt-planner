@@ -6,19 +6,34 @@ import {
   INCREASE_AMOUNT,
   type SlotRef,
 } from '../availability/characterState'
+import { availableFamiliarIds } from '../availability/familiars'
 import { increaseUnavailableReason } from '../availability/increases'
 import { requirementText } from '../availability/requirementText'
 import { type TalentSlotRef, talentOptions } from '../availability/talents'
-import { availableUpgradeIds } from '../availability/upgrades'
-import type { FirstArchetypeEntry, HomeworldEntry, ListKey, OriginEntry, SecondArchetypeEntry } from '../gamedata/types'
+import { availableUpgradeIds, upgradeNeedsFamiliar } from '../availability/upgrades'
+import type {
+  FamiliarEntry,
+  FirstArchetypeEntry,
+  HomeworldEntry,
+  ListKey,
+  OriginEntry,
+  SecondArchetypeEntry,
+} from '../gamedata/types'
 import type { BuildPlan, Choice, Id } from '../model/buildPlan'
 import { choiceSlots, type Schema } from '../model/schema'
-import { isAbilitySlotKind, isTalentSlotKind, isUpgradeSlotKind, type UpgradeSlotKind } from '../model/slotKinds'
+import {
+  isAbilitySlotKind,
+  isFamiliarSlotKind,
+  isTalentSlotKind,
+  isUpgradeSlotKind,
+  type UpgradeSlotKind,
+} from '../model/slotKinds'
 import { unknownIdReason, validateId } from './nulling'
 import type { ValidatorTables } from './validator'
 
 /** The character state during the replay. The availability functions read it as a `CharacterState`. */
 interface ReplayState extends CharacterState {
+  familiar: FamiliarEntry | null
   readonly characteristics: Map<Id, number>
   readonly characteristicIncreaseCounts: Map<Id, number>
   readonly skillIncreaseCounts: Map<Id, number>
@@ -86,6 +101,7 @@ export function initialState(start: ReplayStart, tables: ValidatorTables): Repla
     homeworld: start.homeworld,
     firstArchetype: start.firstArchetype,
     secondArchetype: start.secondArchetype,
+    familiar: null,
     characteristics,
     characteristicIncreaseCounts: new Map(),
     skillIncreaseCounts: new Map(),
@@ -178,7 +194,14 @@ function illegalChoiceReason(id: Id, slot: SlotRef, state: ReplayState, tables: 
   if (isUpgradeSlotKind(kind)) {
     const unknown = unknownIdReason(id, tables.upgrades)
     if (unknown) return unknown
+    if (upgradeNeedsFamiliar(state, kind)) return 'no familiar picked before it'
     return availableUpgradeIds(state, kind).includes(id) ? null : 'already taken'
+  }
+
+  if (isFamiliarSlotKind(kind)) {
+    const unknown = unknownIdReason(id, tables.familiars)
+    if (unknown) return unknown
+    return availableFamiliarIds(tables.familiars).includes(id) ? null : 'not available'
   }
 
   const [entries, counts] =
@@ -204,6 +227,8 @@ function applyChoice(id: Id, slot: SlotRef, state: ReplayState, tables: Validato
   } else if (isUpgradeSlotKind(kind)) {
     const taken = state.upgradesTaken.get(kind) ?? new Set<Id>()
     state.upgradesTaken.set(kind, taken.add(id))
+  } else if (isFamiliarSlotKind(kind)) {
+    state.familiar = tables.familiars.find((entry) => entry.id === id) ?? null
   } else if (kind === 'characteristicIncrease') {
     increment(state.characteristicIncreaseCounts, id, 1)
     increment(state.characteristics, id, INCREASE_AMOUNT, CHARACTERISTIC_BASE_VALUE)

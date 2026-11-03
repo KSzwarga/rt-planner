@@ -30,6 +30,16 @@ const ICONS: Partial<Record<SlotCategory, ReactNode>> = {
       <path d="M12 6.5v13" />
     </>
   ),
+  // A paw print: four toes over a pad.
+  familiar: (
+    <>
+      <path d="M12 12.4c-2.6 0-5 2.7-5 4.9 0 1.6 1.3 2.5 2.7 2.5.9 0 1.5-.5 2.3-.5s1.4.5 2.3.5c1.4 0 2.7-.9 2.7-2.5 0-2.2-2.4-4.9-5-4.9z" />
+      <ellipse cx="5.9" cy="10.2" rx="1.6" ry="2.1" />
+      <ellipse cx="9.5" cy="6.3" rx="1.7" ry="2.3" />
+      <ellipse cx="14.5" cy="6.3" rx="1.7" ry="2.3" />
+      <ellipse cx="18.1" cy="10.2" rx="1.6" ry="2.1" />
+    </>
+  ),
   // A flexed arm: elbow bottom left, fist up, biceps bulging towards the shoulder on the right.
   characteristic: (
     <path d="M21 20H7c-2.9 0-4.2-2.2-3.4-4.4L5.5 8c.4-2.3 2-4 4.1-3.8 2 .2 2.8 2.1 1.8 3.6L9.8 11.2c1.8-2.6 6.7-2.8 8.8-.2.9 1.1 1.6 1.9 2.4 2.2z" />

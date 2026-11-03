@@ -248,4 +248,30 @@ export const ABILITY_LISTS: readonly AbilityList[] = [
       92, // Sensory Deprivation
     ],
   },
+  // The Overseer and its familiars. Not in the wiki table this file is generated from, so empty for now.
+  {
+    key: 'overseer',
+    name: 'Overseer',
+    abilityIds: [],
+  },
+  {
+    key: 'cyberMastiff',
+    name: 'Cyber-Mastiff',
+    abilityIds: [],
+  },
+  {
+    key: 'psyberRaven',
+    name: 'Psyber-Raven',
+    abilityIds: [],
+  },
+  {
+    key: 'servoSkullSwarm',
+    name: 'Servo-Skull Swarm',
+    abilityIds: [],
+  },
+  {
+    key: 'cyberEagle',
+    name: 'Cyber-Eagle',
+    abilityIds: [],
+  },
 ]

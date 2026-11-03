@@ -72,6 +72,33 @@ export const TALENT_LISTS: readonly TalentList[] = [
       451, // Solid Projectile Weapon Expert
       479, // Swift Movements
       530, // Weapon Specialist
+      592, // Finesse
+      593, // Deadly Accuracy
+      594, // Arachnoid Drag-Net
+      595, // Durable Knotting
+      596, // Promethium Treatment
+      597, // Sighter
+      598, // Sticky Webbing
+      599, // Echopulse
+      600, // Liturgy of Insulation
+      601, // Overclocking Module
+      602, // Residual Charge
+      603, // Staggering Jolt
+      604, // Poetry of Pain
+      605, // Defensive Manoeuvre
+      606, // Instant Retribution
+      607, // Enhanced Splash Area
+      608, // External Power Block
+      609, // Piercing Charge
+      610, // Plasma Bank
+      611, // Safety Training
+      612, // Shield Mastery
+      613, // Overpower
+      614, // Power Armour Proficiency
+      615, // Calculated Resolve
+      616, // Charge Distribution
+      617, // Energy Accumulation
+      618, // High Resistance
     ],
   },
   {
@@ -484,6 +511,15 @@ export const TALENT_LISTS: readonly TalentList[] = [
       504, // Unbreakable Will
       515, // Unstoppable
       519, // Vital Points
+      587, // Adamantine Alloys
+      588, // Autonomous Protection Algorithms
+      589, // Emergency Algorithms
+      590, // Mercy of the Omnissiah
+      591, // Poison Dispersal System
+      619, // Lethal Precision
+      620, // Metal Shell
+      621, // Motive-Force Overload
+      622, // Residual Power
     ],
   },
   {
@@ -549,6 +585,7 @@ export const TALENT_LISTS: readonly TalentList[] = [
       234, // Get off Me
       362, // Perfect Timing
       430, // Scatter
+      624, // Stentorian Voice
     ],
   },
   {
@@ -689,6 +726,7 @@ export const TALENT_LISTS: readonly TalentList[] = [
       485, // Tenacity
       502, // Trusty Weapons
       533, // Wounded Beast
+      623, // Lifetime of Scars
     ],
   },
   {
@@ -749,6 +787,84 @@ export const TALENT_LISTS: readonly TalentList[] = [
       228, // Fortune
       288, // Jinx
       291, // Just a Flesh Wound
+    ],
+  },
+  // The Overseer and its familiars, from the GameFAQs guide. The wiki table this file is generated from
+  // leaves them out. Their ability lists are still empty.
+  {
+    key: 'overseer',
+    name: 'Overseer',
+    talentIds: [
+      541, // Armoured Hide
+      542, // Autonomous Medikit
+      543, // Brother-in-Arms
+      544, // Cohesion
+      545, // Dependable Ally
+      546, // Enhanced Augmetics
+      547, // Master's Patronage
+      548, // Rite of Calibration
+      549, // Side by Side
+      550, // Suppression Factor
+    ],
+  },
+  {
+    key: 'cyberMastiff',
+    name: 'Cyber-Mastiff',
+    talentIds: [
+      559, // Ammunition Bags
+      560, // Automatic Protection
+      561, // Auto-Medicae
+      562, // Battle Mode: Terror
+      563, // Chain-Maw
+      564, // Joint Hunting
+      565, // Perimeter Defence
+      566, // Precise Mauling
+      567, // Relentless Pursuit
+      568, // Shared Blood
+      569, // Special Training
+      570, // Weakest Link
+    ],
+  },
+  {
+    key: 'psyberRaven',
+    name: 'Psyber-Raven',
+    talentIds: [
+      571, // Bound By Warp
+      572, // Castigating Echoes
+      573, // Impure Force
+      574, // Psy-Resonator
+      575, // Ruinous Flows
+      576, // Sacrificial Penance
+      577, // Warp Buffer
+    ],
+  },
+  {
+    key: 'servoSkullSwarm',
+    name: 'Servo-Skull Swarm',
+    talentIds: [
+      578, // Emergency Stimulation
+      579, // Energy Multiplier
+      580, // Galvanic Module
+      581, // Impure Force (Servo-Skull Swarm)
+      582, // Kinetic Module
+      583, // Safe Shelter
+      584, // Self-Learning Algorithms
+      585, // Symbiosis
+      586, // Unseen Support
+    ],
+  },
+  {
+    key: 'cyberEagle',
+    name: 'Cyber-Eagle',
+    talentIds: [
+      551, // Bloody Mark
+      552, // Disposition Analysis
+      553, // Eagle's Vigilance
+      554, // Emergency Protocol
+      555, // Sharpened Talons
+      556, // Swift Shadow
+      557, // Tenacious Talons
+      558, // Wind Currents
     ],
   },
 ]

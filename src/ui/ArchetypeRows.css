@@ -23,7 +23,9 @@
 }
 
 .archetype-row--compact {
-  column-gap: 18px;
+  /* Eight 96px archetypes and seven gaps fit the 828px inside the row: 8 × 96 + 7 × 8 = 824. */
+  column-gap: 8px;
+  padding-inline: 8px;
 
   @media (max-width: 640px) {
     column-gap: 12px;

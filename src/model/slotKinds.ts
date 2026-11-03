@@ -11,6 +11,9 @@ export type AbilitySlotKind =
 
 export type IncreaseSlotKind = 'skillIncrease' | 'characteristicIncrease'
 
+/** Picks the Overseer's familiar, from the familiar table. */
+export type FamiliarSlotKind = 'familiar'
+
 /**
  * Picks an upgrade of one ultimate. Each ultimate has its own table. To add one, add its kind here
  * and its bit width to `CHOICE_SLOT_KIND_BITS`.
@@ -28,9 +31,10 @@ export type UpgradeSlotKind =
   | 'takeAndHoldUpgrade'
   | 'steadySuperiorityUpgrade'
   | 'carnivalOfMiseryUpgrade'
+  | 'overchargeUpgrade'
 
 /** A slot kind that holds a user choice, and so takes bits in the URL. */
-export type ChoiceSlotKind = TalentSlotKind | AbilitySlotKind | IncreaseSlotKind | UpgradeSlotKind
+export type ChoiceSlotKind = TalentSlotKind | AbilitySlotKind | IncreaseSlotKind | UpgradeSlotKind | FamiliarSlotKind
 
 /**
  * A keystone feature fixed by a schema, such as Run and Gun. Not a choice, and never encoded.
@@ -70,6 +74,9 @@ const CHOICE_SLOT_KIND_BITS: Readonly<Record<ChoiceSlotKind, number>> = {
   takeAndHoldUpgrade: 3,
   steadySuperiorityUpgrade: 3,
   carnivalOfMiseryUpgrade: 3,
+  overchargeUpgrade: 3,
+  // 4 familiars, so with null 3 bits.
+  familiar: 3,
 }
 
 export function isTalentSlotKind(kind: ChoiceSlotKind): kind is TalentSlotKind {
@@ -82,6 +89,10 @@ export function isAbilitySlotKind(kind: ChoiceSlotKind): kind is AbilitySlotKind
 
 export function isUpgradeSlotKind(kind: ChoiceSlotKind): kind is UpgradeSlotKind {
   return kind.endsWith('Upgrade')
+}
+
+export function isFamiliarSlotKind(kind: ChoiceSlotKind): kind is FamiliarSlotKind {
+  return kind === 'familiar'
 }
 
 export function isKeystoneFeature(slot: SchemaSlot): slot is KeystoneFeatureSlot {

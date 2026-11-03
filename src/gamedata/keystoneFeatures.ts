@@ -1,4 +1,4 @@
-import type { KeystoneFeatureSlot } from '../model/slotKinds'
+import type { KeystoneFeatureSlot, UpgradeSlotKind } from '../model/slotKinds'
 import type { KeystoneFeatureEntry } from './types'
 
 /**
@@ -36,6 +36,9 @@ export const KEYSTONE_FEATURES = {
   steadySuperiority: { name: 'Steady Superiority / Heroic Sacrifice', abbreviation: 'SS', isUltimate: true },
   whereItHurts: { name: 'Where It Hurts', abbreviation: 'WIH', isUltimate: false },
   carnivalOfMisery: { name: 'Carnival of Misery', abbreviation: 'COM', isUltimate: true },
+  consolidation: { name: 'Consolidation', abbreviation: 'CON', isUltimate: false },
+  strategicAdaptation: { name: 'Strategic Adaptation', abbreviation: 'SA', isUltimate: false },
+  overcharge: { name: 'Overcharge', abbreviation: 'OC', isUltimate: true, dependsOnFamiliar: true },
   /** Level 20 of every second archetype grants an additional action point. */
   additionalActionPoint: { name: 'Additional AP', abbreviation: 'AP', isUltimate: false },
 } as const satisfies Readonly<Record<string, KeystoneFeatureEntry>>
@@ -45,4 +48,12 @@ export type KeystoneFeatureKey = keyof typeof KEYSTONE_FEATURES
 /** A schema slot holding this keystone feature. Only takes keys that exist in the table. */
 export function keystoneFeature(featureKey: KeystoneFeatureKey): KeystoneFeatureSlot {
   return { kind: 'keystoneFeature', featureKey }
+}
+
+/** The ultimate an upgrade slot upgrades: `firearmMasteryUpgrade` upgrades Firearm Mastery. */
+export function upgradedUltimate(kind: UpgradeSlotKind): KeystoneFeatureEntry | undefined {
+  const featureKey = kind.replace(/Upgrade$/, '')
+  return Object.hasOwn(KEYSTONE_FEATURES, featureKey)
+    ? KEYSTONE_FEATURES[featureKey as KeystoneFeatureKey]
+    : undefined
 }

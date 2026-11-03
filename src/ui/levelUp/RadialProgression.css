@@ -180,6 +180,10 @@
   &[data-category='ability'] {
     --slot-colour: var(--slot-ability);
   }
+
+  &[data-category='familiar'] {
+    --slot-colour: var(--slot-familiar);
+  }
 }
 
 /* Empty slots stay quiet: a gray node and a faint icon. */

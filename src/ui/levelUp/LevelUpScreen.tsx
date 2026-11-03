@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ArchetypeTier } from '../../availability/characterState'
 import { EXEMPLAR } from '../../gamedata/exemplar'
 import { KEYSTONE_FEATURES } from '../../gamedata/keystoneFeatures'
-import type { ArchetypeEntry } from '../../gamedata/types'
+import type { ArchetypeEntry, FamiliarEntry, KeystoneFeatureEntry } from '../../gamedata/types'
 import type { BuildPlan, Id } from '../../model/buildPlan'
 import { isKeystoneFeature } from '../../model/slotKinds'
 import { CHOICES_FIELD } from '../../validation/replay'
@@ -11,7 +11,7 @@ import { type DetailView, DetailPanel } from './DetailPanel'
 import { OptionList } from './OptionList'
 import { type NodeSelection, RadialProgression } from './RadialProgression'
 import { radialLayout } from './radialLayout'
-import { choiceSlotView, type OptionView, tierSchema } from './slotView'
+import { buildFamiliar, choiceSlotView, type OptionView, tierSchema } from './slotView'
 import './LevelUpScreen.css'
 
 interface LevelUpScreenProps {
@@ -46,7 +46,7 @@ export function LevelUpScreen({ build, tier, onChange, onReturn }: LevelUpScreen
 
   const choices = build[CHOICES_FIELD[tier]]
   const view = selection?.type === 'choice' ? choiceSlotView(build, tier, selection.index) : null
-  const keystone = selection?.type === 'keystone' ? keystoneDetail(nodes, selection) : null
+  const keystone = selection?.type === 'keystone' ? keystoneDetail(nodes, selection, buildFamiliar(build)) : null
 
   function select(next: NodeSelection) {
     setSelection(next)
@@ -117,6 +117,7 @@ function optionDetail(option: OptionView | null): DetailView | null {
   return {
     name: option.name,
     abbreviation: option.abbreviation,
+    iconUrl: option.iconUrl,
     typeLabel: option.typeLabel,
     description: option.description,
     problems: option.problems,
@@ -127,16 +128,27 @@ function optionDetail(option: OptionView | null): DetailView | null {
 function keystoneDetail(
   nodes: ReturnType<typeof radialLayout>,
   selection: Extract<NodeSelection, { type: 'keystone' }>,
+  familiar: FamiliarEntry | null,
 ): DetailView | null {
   const node = nodes.find((candidate) => candidate.level === selection.level && candidate.ring === selection.ring)
   if (!node || !isKeystoneFeature(node.slot)) return null
-  const feature = KEYSTONE_FEATURES[node.slot.featureKey as keyof typeof KEYSTONE_FEATURES]
+  const feature: KeystoneFeatureEntry | undefined =
+    KEYSTONE_FEATURES[node.slot.featureKey as keyof typeof KEYSTONE_FEATURES]
+  const kind = feature?.isUltimate ? 'Ultimate' : 'Keystone feature'
+  const ofFamiliar = feature?.dependsOnFamiliar && familiar ? ` · ${familiar.name}` : ''
   return {
     name: feature?.name ?? node.slot.featureKey,
     abbreviation: feature?.abbreviation ?? '?',
-    typeLabel: feature?.isUltimate ? `Ultimate · level ${node.level}` : `Keystone feature · level ${node.level}`,
-    description: '',
+    iconUrl: null,
+    typeLabel: `${kind}${ofFamiliar} · level ${node.level}`,
+    description: feature?.dependsOnFamiliar ? familiarUltimateText(familiar) : '',
     problems: [],
     isLocked: false,
   }
+}
+
+/** The effect of an ultimate that depends on the familiar, such as Overcharge: the picked familiar's. */
+function familiarUltimateText(familiar: FamiliarEntry | null): string {
+  if (familiar === null) return 'Its effect depends on the familiar. Pick a familiar to see it.'
+  return `Heroic Act: ${familiar.ultimateHeroicAct}\n\nDesperate Measures: ${familiar.ultimateDesperateMeasures}`
 }

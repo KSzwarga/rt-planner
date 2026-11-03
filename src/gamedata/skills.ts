@@ -60,6 +60,7 @@ export const SKILLS: readonly SkillEntry[] = [
       SECOND_ARCHETYPE.assassin,
       SECOND_ARCHETYPE.bountyHunter,
       SECOND_ARCHETYPE.archMilitant,
+      SECOND_ARCHETYPE.overseer,
     ],
   },
   {
@@ -74,7 +75,11 @@ export const SKILLS: readonly SkillEntry[] = [
       FIRST_ARCHETYPE.officer,
       FIRST_ARCHETYPE.bladedancer,
     ],
-    availableForSecondArchetypes: [SECOND_ARCHETYPE.vanguard, SECOND_ARCHETYPE.archMilitant],
+    availableForSecondArchetypes: [
+      SECOND_ARCHETYPE.vanguard,
+      SECOND_ARCHETYPE.archMilitant,
+      SECOND_ARCHETYPE.overseer,
+    ],
   },
   {
     id: SKILL.COERCION,
@@ -89,7 +94,7 @@ export const SKILLS: readonly SkillEntry[] = [
     availableForHomeworlds: [],
     availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.warrior, FIRST_ARCHETYPE.officer],
-    availableForSecondArchetypes: [SECOND_ARCHETYPE.vanguard],
+    availableForSecondArchetypes: [SECOND_ARCHETYPE.vanguard, SECOND_ARCHETYPE.overseer],
   },
   {
     id: SKILL.COMMERCE,
@@ -195,6 +200,7 @@ export const SKILLS: readonly SkillEntry[] = [
       SECOND_ARCHETYPE.masterTactician,
       SECOND_ARCHETYPE.archMilitant,
       SECOND_ARCHETYPE.executioner,
+      SECOND_ARCHETYPE.overseer,
     ],
   },
   {
@@ -219,6 +225,6 @@ export const SKILLS: readonly SkillEntry[] = [
     availableForHomeworlds: [],
     availableForTalents: [],
     availableForFirstArchetypes: [FIRST_ARCHETYPE.operative],
-    availableForSecondArchetypes: [SECOND_ARCHETYPE.grandStrategist],
+    availableForSecondArchetypes: [SECOND_ARCHETYPE.grandStrategist, SECOND_ARCHETYPE.overseer],
   },
 ]

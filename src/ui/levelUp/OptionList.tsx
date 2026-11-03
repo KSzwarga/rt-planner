@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import type { Id } from '../../model/buildPlan'
+import { ENTRY_ICON_SIZE } from '../entryIcons'
 import type { OptionGroup, OptionView } from './slotView'
 import './OptionList.css'
 
@@ -18,9 +19,14 @@ interface OptionListProps {
  */
 export function OptionList({ title, groups, emptyMessage, onPick, onHover }: OptionListProps) {
   const hasOptions = groups.some((group) => group.options.length > 0)
+  // Icons are wider than the abbreviation circles, so a list with any icon widens every circle's
+  // column to match, keeping the names aligned.
+  const hasImages = groups.some((group) => group.options.some((option) => option.iconUrl !== null))
+  const classNames = ['option-list']
+  if (hasImages) classNames.push('option-list--with-images')
 
   return (
-    <section className="option-list" aria-label={title} onMouseLeave={() => onHover(null)}>
+    <section className={classNames.join(' ')} aria-label={title} onMouseLeave={() => onHover(null)}>
       <h2 className="option-list__title">{title}</h2>
       {hasOptions ? (
         <div className="option-list__scroll">
@@ -71,9 +77,15 @@ function OptionButton({ option, onPick, onHover }: OptionButtonProps) {
       onMouseEnter={() => onHover(option)}
       onFocus={() => onHover(option)}
     >
-      <span className="option__icon" aria-hidden="true">
-        {option.abbreviation}
-      </span>
+      {option.iconUrl ? (
+        <span className="option__frame" aria-hidden="true">
+          <img className="option__image" src={option.iconUrl} alt="" width={ENTRY_ICON_SIZE} height={ENTRY_ICON_SIZE} />
+        </span>
+      ) : (
+        <span className="option__icon" aria-hidden="true">
+          {option.abbreviation}
+        </span>
+      )}
       <span className="option__name">{option.name}</span>
     </button>
   )

@@ -28,14 +28,12 @@ export interface TalentOption {
 }
 
 /**
- * The lists in a talent slot's pool, in the order the UI groups them: the owning archetype's list
- * (archetype slots only), `common`, then the lists granted by the origin, homeworld and talents
- * (Availability Rules: Rule 1).
+ * The lists in a talent slot's pool, in the order the UI groups them: the owning archetype's lists
+ * (archetype slots only: its own list, then its familiar's), `common`, then the lists granted by the
+ * origin, homeworld and talents (Availability Rules: Rule 1).
  */
 export function talentPoolLists(state: CharacterState, slot: TalentSlotRef): ListKey[] {
-  const archetypeList = archetypeTalentList(state, slot.kind)
-  const lists = [...(archetypeList === null ? [] : [archetypeList]), COMMON_TALENT_LIST, ...state.talentLists]
-  return [...new Set(lists)]
+  return [...new Set([...archetypeTalentLists(state, slot.kind), COMMON_TALENT_LIST, ...state.talentLists])]
 }
 
 /** Every talent in a slot's pool, with whether it can be selected and why not. */
@@ -75,20 +73,29 @@ export function requirementHolds(requirement: Requirement, state: CharacterState
       return characteristicValue(state, requirement.id) >= requirement.min
     case 'skillIncrease':
       return (state.skillIncreaseCounts.get(requirement.id) ?? 0) > 0
+    case 'archetype': {
+      const archetype = requirement.tier === 'first' ? state.firstArchetype : state.secondArchetype
+      return archetype?.id === requirement.id
+    }
+    case 'origin':
+      return state.origin?.id === requirement.id
     case 'anyOf':
       return requirement.of.some((option) => requirementHolds(option, state, slot))
+    case 'noneOf':
+      return !requirement.of.some((option) => requirementHolds(option, state, slot))
   }
 }
 
-function archetypeTalentList(state: CharacterState, kind: TalentSlotKind): ListKey | null {
+/** The archetype lists of a talent slot. Only the Overseer, a second archetype, has a familiar. */
+function archetypeTalentLists(state: CharacterState, kind: TalentSlotKind): ListKey[] {
   switch (kind) {
     case 'firstArchetypeTalent':
-      return state.firstArchetype?.archetypeTalentList ?? null
+      return state.firstArchetype ? [state.firstArchetype.archetypeTalentList] : []
     case 'secondArchetypeTalent':
-      return state.secondArchetype?.archetypeTalentList ?? null
+      return [state.secondArchetype?.archetypeTalentList, state.familiar?.talentList].filter((key) => key !== undefined)
     case 'exemplarArchetypeTalent':
-      return EXEMPLAR_TALENT_LIST
+      return [EXEMPLAR_TALENT_LIST]
     case 'commonTalent':
-      return null
+      return []
   }
 }

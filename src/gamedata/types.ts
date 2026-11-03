@@ -67,6 +67,8 @@ export type DarkestHourEntry = TableEntry
  */
 export interface TalentEntry extends AbbreviatedEntry {
   readonly description: string
+  /** Its icon's file name, without extension, in `public/icons/talents/`. Without one, its abbreviation is shown. */
+  readonly icon?: string
 }
 
 /**
@@ -79,7 +81,10 @@ export type Requirement =
   | { readonly kind: 'ability'; readonly id: Id }
   | { readonly kind: 'characteristic'; readonly id: Id; readonly min: number }
   | { readonly kind: 'skillIncrease'; readonly id: Id }
+  | { readonly kind: 'archetype'; readonly tier: 'first' | 'second'; readonly id: Id }
+  | { readonly kind: 'origin'; readonly id: Id }
   | { readonly kind: 'anyOf'; readonly of: readonly Requirement[] }
+  | { readonly kind: 'noneOf'; readonly of: readonly Requirement[] }
 
 /** A named set of talents. Holds no rules, only membership (Availability Rules: Lists). */
 export interface TalentList {
@@ -94,6 +99,8 @@ export interface TalentList {
  */
 export interface AbilityEntry extends AbbreviatedEntry {
   readonly description: string
+  /** Its icon's file name, without extension, in `public/icons/abilities/`. Without one, its abbreviation is shown. */
+  readonly icon?: string
 }
 
 /** A named set of abilities. Holds no rules, only membership (Availability Rules: Lists). */
@@ -116,6 +123,25 @@ export interface KeystoneFeatureEntry {
   readonly abbreviation: string
   /** Whether it is the archetype's ultimate, such as Firearm Mastery, upgraded by its upgrade slots. */
   readonly isUltimate: boolean
+  /**
+   * Whether its effect comes from the build's familiar, like the Overseer's Overcharge. Its upgrade
+   * slots then need a familiar, and their 4 upgrades are that familiar's.
+   */
+  readonly dependsOnFamiliar?: boolean
+}
+
+/**
+ * The Overseer's familiar, picked in a `familiar` slot. Its lists apply like an archetype list, in
+ * the Overseer's own archetype slots (Availability Rules: Familiar), and it decides the effect of
+ * the Overseer's ultimate.
+ */
+export interface FamiliarEntry extends AbbreviatedEntry {
+  readonly description: string
+  readonly talentList: ListKey
+  readonly abilityList: ListKey
+  /** The effect of Overcharge, the ultimate that depends on the familiar. */
+  readonly ultimateHeroicAct: string
+  readonly ultimateDesperateMeasures: string
 }
 
 /** An archetype: its level progression, and the lists that apply only to its own archetype slots. */
@@ -134,6 +160,7 @@ export type ArchetypeIconName =
   | 'swordAndGun'
   | 'crosshair'
   | 'sparkle'
+  | 'eye'
 
 export interface ArchetypeEntry extends TableEntry {
   readonly icon: ArchetypeIconName
