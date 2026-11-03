@@ -78,6 +78,7 @@ export type Requirement =
   | { readonly kind: 'talent'; readonly id: Id }
   | { readonly kind: 'ability'; readonly id: Id }
   | { readonly kind: 'characteristic'; readonly id: Id; readonly min: number }
+  | { readonly kind: 'skillIncrease'; readonly id: Id }
   | { readonly kind: 'anyOf'; readonly of: readonly Requirement[] }
 
 /** A named set of talents. Holds no rules, only membership (Availability Rules: Lists). */
