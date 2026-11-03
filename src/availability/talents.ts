@@ -73,6 +73,8 @@ export function requirementHolds(requirement: Requirement, state: CharacterState
       return state.abilitiesTaken.has(requirement.id)
     case 'characteristic':
       return characteristicValue(state, requirement.id) >= requirement.min
+    case 'skillIncrease':
+      return (state.skillIncreaseCounts.get(requirement.id) ?? 0) > 0
     case 'anyOf':
       return requirement.of.some((option) => requirementHolds(option, state, slot))
   }
