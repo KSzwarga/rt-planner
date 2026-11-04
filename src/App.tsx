@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { ArchetypeTier } from './availability/characterState'
 import { ArchetypePickScreen } from './ui/ArchetypePickScreen'
 import { LevelUpScreen } from './ui/levelUp/LevelUpScreen'
 import { tierSchema } from './ui/levelUp/slotView'
+import { LoadingWheel } from './ui/LoadingWheel'
 import { useBuildInUrl } from './ui/useBuildInUrl'
+import { useScreenTransition } from './ui/useScreenTransition'
 
 /** Which screen is shown (UI Design: Screens). Not part of the build, so not in the URL. */
 type Screen = { readonly name: 'archetypePick' } | { readonly name: 'levelUp'; readonly tier: ArchetypeTier }
 
 function App() {
   const [build, update] = useBuildInUrl()
-  const [screen, setScreen] = useState<Screen>({ name: 'archetypePick' })
+  const { screen, isLoading, openScreen } = useScreenTransition<Screen>({ name: 'archetypePick' })
 
   // A pasted link can drop the archetype being levelled up: then the archetype pick screen shows.
   const levelUpTier = screen.name === 'levelUp' && tierSchema(build, screen.tier) !== null ? screen.tier : null
@@ -19,6 +21,7 @@ function App() {
     window.scrollTo(0, 0)
   }, [levelUpTier])
 
+  if (isLoading) return <LoadingWheel />
   if (levelUpTier !== null) {
     return (
       <LevelUpScreen
@@ -26,7 +29,7 @@ function App() {
         build={build}
         tier={levelUpTier}
         onChange={update}
-        onReturn={() => setScreen({ name: 'archetypePick' })}
+        onReturn={() => openScreen({ name: 'archetypePick' })}
       />
     )
   }
@@ -34,7 +37,7 @@ function App() {
     <ArchetypePickScreen
       build={build}
       onChange={update}
-      onOpenLevelUp={(tier) => setScreen({ name: 'levelUp', tier })}
+      onOpenLevelUp={(tier) => openScreen({ name: 'levelUp', tier })}
     />
   )
 }

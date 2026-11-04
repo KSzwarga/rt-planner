@@ -161,7 +161,7 @@ test('talents with an icon show it in the option list, on their node and in the 
   await expect(icon).toHaveAttribute('src', /\/icons\/talents\/fatebringer\.webp$/)
   await expect(icon).toHaveJSProperty('naturalWidth', 48)
   // A talent without an icon keeps its abbreviation.
-  await expect(option(page, 'Base Skill: Athletics').locator('img')).toHaveCount(0)
+  await expect(option(page, 'Advanced Skill: Athletics').locator('img')).toHaveCount(0)
 
   await option(page, 'Fatebringer').click()
   await expect(node(page, 7, 'Common talents').locator('img')).toHaveAttribute('src', /fatebringer\.webp$/)

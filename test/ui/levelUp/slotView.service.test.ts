@@ -124,18 +124,21 @@ describe('talent icons', () => {
   const FATEBRINGER = TALENTS.find((talent) => talent.name === 'Fatebringer')!.id
   // Files in public/ are served under the app's base path.
   const FATEBRINGER_ICON = `${import.meta.env.BASE_URL}icons/talents/fatebringer.webp`
+  // Any talent still without an icon: picked from the data, so adding icons doesn't break these tests.
+  const hasIcon = (id: number) => TALENTS.find((talent) => talent.id === id)?.icon !== undefined
 
-  it("gives a talent with an icon its URL, under the app's base path", () => {
+  it("gives a talent with an icon its URL, under the app's base path, and one without none", () => {
     // The Diviner origin grants the Divination list, which has Fatebringer.
     const plan = soldier([], { originId: 8 })
     const options = choiceSlotView(plan, 'first', slotIndex(7, 'commonTalent')).groups.flatMap((group) => group.options)
     expect(options.find((option) => option.id === FATEBRINGER)?.iconUrl).toBe(FATEBRINGER_ICON)
-    expect(options.find((option) => option.id === HEAVY_ARMOUR)?.iconUrl).toBeNull()
+    expect(options.find((option) => !hasIcon(option.id))?.iconUrl).toBeNull()
   })
 
   it("gives a picked talent's node its icon, and nothing else one", () => {
+    const iconless = TALENTS.find((talent) => talent.icon === undefined)!.id
     expect(choiceIconUrl('commonTalent', FATEBRINGER)).toBe(FATEBRINGER_ICON)
-    expect(choiceIconUrl('commonTalent', HEAVY_ARMOUR)).toBeNull()
+    expect(choiceIconUrl('commonTalent', iconless)).toBeNull()
     expect(choiceIconUrl('skillIncrease', 1)).toBeNull()
   })
 })

@@ -83,6 +83,8 @@ src/
 │   ├── StartingIncreases.tsx One cell with two pips per characteristic
 │   ├── startingIncreaseEdits.ts  cycleStartingIncrease: what clicking a cell does
 │   ├── useBuildInUrl.ts      The build as React state, synced with the URL fragment
+│   ├── useScreenTransition.ts  The open screen, switched through a brief loading wheel
+│   ├── LoadingWheel.tsx      The spinning wheel shown between screens
 │   └── levelUp/              The level-up screen
 │       ├── LevelUpScreen.tsx Ring, option list and detail panel of one archetype
 │       ├── RadialProgression.tsx  The ring of nodes around the archetype emblem

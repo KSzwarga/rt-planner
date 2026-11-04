@@ -495,3 +495,27 @@ A chronological log of decisions made during development that affect the archite
 - **Context:** The icon files were redone: the label bar is gone, and the art is smaller and centred on more background, at least 7px from every edge. That makes decision 058's bar crop obsolete.
 - **Decision:** All label bar handling is removed: the `--entry-icon-art-rows` token and the scaled, top-anchored `.entry-icon-art` crop. In circles, on the ring and in the detail panel, the whole image is shown with its background (`.entry-icon-round`). The circle only cuts off background corners, so all of the art shows. In the option list, the background margin is cropped off every side, the same `--entry-icon-margin` of 7px for every icon, so the square shows just the art at 36px, as before, in its frame (decision 057). This replaces decision 058.
 - **Consequences:** Icons need their art at least `--entry-icon-margin` from every edge, or the list crops into it. If new icons have a different margin, the token changes.
+
+## 060. Hurt Like Hell is removed from the talents
+
+- **Date:** 2026-11-04
+- **Status:** Accepted
+- **Context:** The project owner asked for the Hurt Like Hell talent (ID 259), from the wiki's table, to be removed.
+- **Decision:** Its entry is removed from `talents.ts` and from its talent list. The other talents keep their IDs, so 259 is left unused, and new talents are still appended at the end.
+- **Consequences:** A link that picked Hurt Like Hell decodes with that choice nulled, like any unknown talent ID. Regenerating the talent table from the wiki must leave it out.
+
+## 061. A brief loading wheel between screens
+
+- **Date:** 2026-11-04
+- **Status:** Accepted
+- **Context:** Switching between the archetype pick screen and a level-up screen was instant, which felt artificial.
+- **Decision:** `useScreenTransition` holds which screen is open. Opening a screen first shows `LoadingWheel`, a spinning wheel centred on the page with a "Loading" label in a `status` region, for `SCREEN_TRANSITION_MS` (400ms), then shows the screen. Opening another during the wheel restarts it, and the last one opens. Only screen switches show it: loading the page and edits within a screen don't. With reduced motion, the wheel spins more slowly. The delay is cosmetic: nothing is loaded during it.
+- **Consequences:** Every screen switch takes 400ms longer. E2E tests wait for the new screen's content, as Playwright's assertions already retry.
+
+## 062. The loading wheel turns exactly once
+
+- **Date:** 2026-11-04
+- **Status:** Accepted
+- **Context:** Decision 061's wheel spun every 0.8s, so it was cut off halfway through its first turn when the screen showed after 400ms.
+- **Decision:** The wheel turns once, over `SCREEN_TRANSITION_MS`, passed to the CSS as `--loading-wheel-turn` so the two can't drift apart. It eases in and out, so it ends at rest, and holds its last frame. With reduced motion it doesn't turn. This replaces 061's spin speed and its slower spin for reduced motion.
+- **Consequences:** Changing `SCREEN_TRANSITION_MS` changes how fast the wheel turns, and it still makes one whole turn.

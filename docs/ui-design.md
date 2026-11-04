@@ -11,7 +11,7 @@ What the user may pick is never decided here. Options come from the availability
 | [Archetype pick](#archetype-pick-screen)       | Choose the static choices, starting increases, and the first archetype, second archetype and Exemplar |
 | [Level-up](#level-up-screen)                   | Fill in one archetype's level progression                 |
 
-Clicking an archetype, or the Exemplar, that can be picked selects it and opens its level-up screen. Clicking the selected one opens it without changing anything. **Return** goes back to the archetype pick screen. Which screen is open isn't part of the build, so it isn't in the URL: a reload opens the archetype pick screen.
+Clicking an archetype, or the Exemplar, that can be picked selects it and opens its level-up screen. Clicking the selected one opens it without changing anything. **Return** goes back to the archetype pick screen. Which screen is open isn't part of the build, so it isn't in the URL: a reload opens the archetype pick screen. Switching between the two screens shows a loading wheel, centred on the page, for 400ms first, turning exactly once (`LoadingWheel`, `useScreenTransition`), so the switch feels less abrupt ([decision 061](./decisions.md#061-a-brief-loading-wheel-between-screens)). Loading the page and edits within a screen don't show it.
 
 Every edit on either screen follows the same path: `apply change → validate → store state → encode to URL` ([Architecture §6](./Architecture.md#6-validation)).
 

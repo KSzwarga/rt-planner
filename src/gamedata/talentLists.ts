@@ -60,7 +60,6 @@ export const TALENT_LISTS: readonly TalentList[] = [
       237, // Grenadier
       246, // Heavy Armour Proficiency
       248, // Heavy Weapon Proficiency
-      259, // Hurt Like Hell
       287, // It Will Not Die
       299, // Las Weapon Expert
       322, // Melta Weapon Expert
@@ -212,6 +211,7 @@ export const TALENT_LISTS: readonly TalentList[] = [
       506, // Undaunted
       524, // Watch Yourself!
       534, // Wounds Are No Excuse!
+      625, // Decisive Response
     ],
   },
   {

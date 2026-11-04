@@ -24,6 +24,20 @@ test('picking an archetype selects it and opens its level-up screen', async ({ p
   await expect(archetype(page, 'First archetype', 'Warrior')).toHaveAttribute('aria-pressed', 'true')
 })
 
+test('a loading wheel shows briefly between screens', async ({ page }) => {
+  const wheel = page.getByRole('status').filter({ hasText: 'Loading' })
+
+  await archetype(page, 'First archetype', 'Warrior').click()
+  await expect(wheel).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Loadout // Archetype 01' })).toBeVisible()
+  await expect(wheel).toBeHidden()
+
+  await page.getByRole('button', { name: 'Return' }).click()
+  await expect(wheel).toBeVisible()
+  await expect(archetype(page, 'First archetype', 'Warrior')).toBeVisible()
+  await expect(wheel).toBeHidden()
+})
+
 test('clicking the selected archetype opens it again, and keeps it selected', async ({ page }) => {
   await pick(page, 'First archetype', 'Soldier')
   await archetype(page, 'First archetype', 'Soldier').click()
